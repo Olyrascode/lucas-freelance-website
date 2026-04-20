@@ -1,0 +1,111 @@
+@use "styles/variables" as *;
+@use "styles/mixins" as *;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  background-color: $color-bg;
+  color: $color-fg-secondary;
+  color-scheme: dark;
+  font-family: $font-body;
+  font-size: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: auto;
+}
+
+body {
+  @include font-body($font-body-m);
+  background-color: $color-bg;
+  color: $color-fg-secondary;
+  min-height: 100dvh;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-family: $font-display;
+  font-weight: 400;
+  color: $color-fg;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+ol,
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+:focus-visible {
+  @include focus-ring;
+}
+
+::selection {
+  background-color: $color-fg;
+  color: $color-bg;
+}
+
+// -----------------------------------------------------------------------------
+// Canonical W3C reduced-motion override — see CLAUDE.md for the exception.
+// This is the only place in the codebase that legitimately uses !important,
+// and only to neutralize third-party motion code we don't own.
+// -----------------------------------------------------------------------------
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

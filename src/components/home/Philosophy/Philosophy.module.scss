@@ -1,0 +1,30 @@
+@use "styles/variables" as *;
+@use "styles/mixins" as *;
+
+.root {
+  padding-block: $section-spacing;
+}
+
+.inner {
+  @include container;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-3;
+
+  @include desktop-up {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: $space-5;
+    align-items: start;
+  }
+}
+
+.label {
+  @include font-display($font-display-l);
+  color: $color-fg;
+}
+
+.body {
+  @include font-body($font-body-l);
+  color: $color-fg-secondary;
+  max-width: 32rem;
+}

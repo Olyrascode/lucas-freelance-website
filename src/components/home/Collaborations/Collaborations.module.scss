@@ -1,0 +1,121 @@
+@use "styles/variables" as *;
+@use "styles/mixins" as *;
+
+.root {
+  padding-block: $section-spacing;
+  border-top: 1px solid $color-line;
+}
+
+.inner {
+  @include container;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-3;
+
+  @include desktop-up {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+    grid-template-rows: auto auto auto;
+    column-gap: $space-5;
+    row-gap: $space-3;
+    align-items: start;
+  }
+}
+
+.index {
+  @include font-label;
+  color: $color-fg-muted;
+
+  @include desktop-up {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+.title {
+  @include font-display($font-display-l);
+  color: $color-fg;
+
+  @include desktop-up {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+
+.lead {
+  @include font-body($font-body-l);
+  color: $color-fg-secondary;
+  max-width: 36rem;
+
+  @include desktop-up {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    padding-top: 8px;
+  }
+}
+
+.list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  border-top: 1px solid $color-line;
+  margin-top: $space-4;
+
+  @include tablet-up {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include desktop-up {
+    grid-row: 3;
+    grid-column: 1 / -1;
+    margin-top: $space-5;
+  }
+}
+
+.item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: $space-3;
+  padding-block: $space-4;
+  border-bottom: 1px solid $color-line;
+
+  @include tablet-up {
+    padding: $space-4 $space-3;
+
+    &:first-child {
+      border-right: 1px solid $color-line;
+    }
+  }
+
+  @include desktop-up {
+    padding: $space-5;
+  }
+}
+
+.itemIndex {
+  @include font-label($font-label-sm);
+  color: $color-fg-muted;
+  padding-top: 0.5em;
+}
+
+.itemBody {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+}
+
+.itemName {
+  @include font-display($font-display-m);
+  color: $color-fg;
+}
+
+.itemRole {
+  @include font-body($font-body-m);
+  color: $color-fg-secondary;
+}
+
+.itemKind {
+  @include font-body($font-body-s);
+  color: $color-fg-muted;
+  max-width: 28rem;
+}

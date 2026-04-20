@@ -1,0 +1,184 @@
+@use "styles/variables" as *;
+@use "styles/mixins" as *;
+
+.root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: $z-sticky;
+  height: $header-height-mobile;
+  transition:
+    transform $motion-duration-fast $motion-ease-soft,
+    background-color $motion-duration-fast $motion-ease-soft,
+    border-color $motion-duration-fast $motion-ease-soft,
+    backdrop-filter $motion-duration-fast $motion-ease-soft;
+  background-color: transparent;
+  border-bottom: 1px solid transparent;
+
+  @include tablet-up {
+    height: $header-height-desktop;
+  }
+
+  &[data-state="top"] {
+    transform: translateY(0);
+    background-color: transparent;
+    backdrop-filter: none;
+    border-bottom-color: transparent;
+  }
+
+  &[data-state="scrolled-up"] {
+    transform: translateY(0);
+    background-color: rgba($color-bg, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom-color: $color-line;
+  }
+
+  &[data-state="scrolled-down"] {
+    transform: translateY(-100%);
+    background-color: rgba($color-bg, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom-color: $color-line;
+  }
+}
+
+.inner {
+  @include container;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  gap: $space-3;
+}
+
+.logo {
+  @include font-body($font-body-m);
+  font-weight: 500;
+  color: $color-fg;
+  letter-spacing: -0.01em;
+  transition: opacity $motion-duration-fast $motion-ease-soft;
+
+  &:hover {
+    opacity: 0.75;
+  }
+}
+
+.nav {
+  display: none;
+
+  @include tablet-up {
+    display: block;
+  }
+}
+
+.menu {
+  display: flex;
+  align-items: center;
+  gap: $space-4;
+}
+
+.link {
+  @include font-body($font-body-s);
+  color: $color-fg;
+  position: relative;
+  transition: color $motion-duration-fast $motion-ease-soft;
+
+  &:hover {
+    color: $color-fg-secondary;
+  }
+
+  &[aria-current="page"] {
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -6px;
+      height: 1px;
+      background-color: $color-fg;
+    }
+  }
+}
+
+.burger {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 28px;
+  height: 28px;
+  color: $color-fg;
+
+  @include tablet-up {
+    display: none;
+  }
+}
+
+.burgerLine {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background-color: currentColor;
+  transition:
+    transform $motion-duration-fast $motion-ease-soft,
+    opacity $motion-duration-fast $motion-ease-soft;
+  transform-origin: center;
+
+  &[data-open="true"]:first-child {
+    transform: translateY(3px) rotate(45deg);
+  }
+
+  &[data-open="true"]:last-child {
+    transform: translateY(-3px) rotate(-45deg);
+  }
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: $z-modal;
+  background-color: $color-bg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity $motion-duration-fast $motion-ease-soft;
+
+  &[data-open="true"] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @include tablet-up {
+    display: none;
+  }
+}
+
+.overlayNav {
+  width: 100%;
+  padding: 0 $gutter;
+}
+
+.overlayMenu {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  align-items: center;
+  text-align: center;
+}
+
+.overlayLink {
+  font-family: $font-display;
+  font-size: $font-display-m;
+  font-weight: 400;
+  color: $color-fg;
+  letter-spacing: -0.02em;
+  line-height: 1;
+
+  &[aria-current="page"] {
+    color: $color-fg-muted;
+  }
+}

@@ -1,0 +1,27 @@
+@use "styles/variables" as *;
+@use "styles/mixins" as *;
+
+.root {
+  position: fixed;
+  top: $space-2;
+  left: $space-2;
+  z-index: $z-top;
+  padding: $space-1 $space-2;
+  background-color: $color-fg;
+  color: $color-bg;
+  font-family: $font-mono;
+  font-size: $font-label;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  transform: translateY(calc(-100% - #{$space-3}));
+  opacity: 0;
+  transition:
+    transform $motion-duration-fast $motion-ease-soft,
+    opacity $motion-duration-fast $motion-ease-soft;
+
+  &:focus-visible {
+    transform: translateY(0);
+    opacity: 1;
+    outline: none;
+  }
+}

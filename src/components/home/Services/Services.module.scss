@@ -1,0 +1,200 @@
+@use "styles/variables" as *;
+@use "styles/mixins" as *;
+
+// Inverted palette — the Services section breaks the dark flow
+// on purpose, exactly like an inserted editorial spread.
+$svc-bg: #ececec;
+$svc-fg: $color-bg;
+$svc-fg-muted: #555555;
+$svc-fg-subtle: #888888;
+$svc-line: rgba(10, 10, 10, 0.12);
+$svc-line-subtle: rgba(10, 10, 10, 0.06);
+
+.root {
+  padding: $section-spacing $gutter;
+}
+
+.inner {
+  width: 100%;
+  background-color: $svc-bg;
+  color: $svc-fg;
+  padding: $space-5 $space-4;
+  display: flex;
+  flex-direction: column;
+  gap: $space-6;
+
+  @include desktop-up {
+    padding: $space-6 $space-5;
+  }
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-3;
+
+  @include desktop-up {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+    grid-template-rows: auto auto;
+    column-gap: $space-5;
+    row-gap: $space-3;
+    align-items: start;
+  }
+}
+
+.index {
+  @include font-label;
+  color: $svc-fg-muted;
+
+  @include desktop-up {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+.title {
+  @include font-display($font-display-l);
+  color: $svc-fg;
+
+  @include desktop-up {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+
+.note {
+  @include font-body($font-body-l);
+  color: $svc-fg-muted;
+  max-width: 36rem;
+
+  @include desktop-up {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    padding-top: 8px;
+  }
+}
+
+.list {
+  display: grid;
+  grid-template-columns: 1fr;
+  border-top: 1px solid $svc-line;
+
+  @include tablet-up {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.item {
+  border-bottom: 1px solid $svc-line;
+
+  @include tablet-up {
+    &:nth-child(odd) {
+      border-right: 1px solid $svc-line;
+    }
+  }
+}
+
+.itemInner {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  padding: $space-4;
+  height: 100%;
+  transition: background-color $motion-duration-fast $motion-ease-soft;
+
+  &:hover {
+    background-color: rgba(10, 10, 10, 0.03);
+  }
+
+  @include desktop-up {
+    padding: $space-5;
+    gap: $space-4;
+  }
+}
+
+.itemHeader {
+  display: flex;
+  align-items: baseline;
+  gap: $space-3;
+  justify-content: space-between;
+}
+
+.itemIndex {
+  @include font-label($font-label-sm);
+  color: $svc-fg-muted;
+}
+
+.itemTitle {
+  @include font-display($font-display-s);
+  color: $svc-fg;
+  flex: 1;
+}
+
+.itemDesc {
+  @include font-body($font-body-m);
+  color: $svc-fg;
+  max-width: 32rem;
+}
+
+.bullets {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  padding-top: $space-2;
+  border-top: 1px solid $svc-line-subtle;
+
+  li {
+    @include font-body($font-body-s);
+    color: $svc-fg-muted;
+    display: flex;
+    gap: $space-2;
+    align-items: baseline;
+
+    &::before {
+      content: "—";
+      color: $svc-fg-subtle;
+      flex: 0 0 auto;
+    }
+  }
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  justify-content: space-between;
+
+  @include tablet-up {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.maintenance {
+  @include font-body($font-body-s);
+  color: $svc-fg-muted;
+}
+
+.detailsLink {
+  @include font-body($font-body-m);
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  color: $svc-fg;
+  padding-block: $space-2;
+  border-bottom: 1px solid $svc-line;
+  transition: border-color $motion-duration-fast $motion-ease-soft;
+
+  svg {
+    transition: transform $motion-duration-fast $motion-ease-soft;
+  }
+
+  &:hover {
+    border-color: $svc-fg;
+
+    svg {
+      transform: translateX(4px);
+    }
+  }
+}

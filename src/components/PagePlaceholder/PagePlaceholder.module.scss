@@ -1,0 +1,38 @@
+@use "styles/variables" as *;
+@use "styles/mixins" as *;
+
+.root {
+  min-height: 100dvh;
+  padding-top: calc(#{$header-height-desktop} + #{$section-spacing-hero});
+  padding-bottom: $section-spacing;
+  background-color: $color-bg;
+}
+
+.inner {
+  @include container;
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  max-width: 70rem;
+}
+
+.index {
+  @include font-label;
+  color: $color-fg-muted;
+}
+
+.title {
+  font-family: $font-display;
+  font-size: $font-display-xl;
+  font-weight: 300;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  color: $color-fg;
+}
+
+.description {
+  @include font-body($font-body-l);
+  color: $color-fg-secondary;
+  max-width: 42rem;
+  margin-top: $space-3;
+}

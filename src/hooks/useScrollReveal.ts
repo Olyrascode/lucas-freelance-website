@@ -1,0 +1,203 @@
+"use client";
+
+import { useRef, type RefObject } from "react";
+import { useGSAP } from "@gsap/react";
+import { gsap, ScrollTrigger } from "@/lib/gsap";
+import { motionDuration, motionEase, motionStagger } from "@/lib/motion";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+
+export interface ScrollRevealOptions {
+  readonly selector?: string;
+  readonly linesSelector?: string;
+  readonly y?: number;
+  readonly duration?: number;
+  readonly stagger?: number;
+  readonly lineStagger?: number;
+  readonly start?: string;
+  readonly ease?: string;
+  readonly delay?: number;
+}
+
+const LINE_SPLIT_MARKER = "__lineSplit";
+
+interface MarkableHTMLElement extends HTMLElement {
+  [LINE_SPLIT_MARKER]?: boolean;
+}
+
+function splitTextIntoLines(el: HTMLElement): HTMLElement[] {
+  const markable = el as MarkableHTMLElement;
+  if (markable[LINE_SPLIT_MARKER]) return [];
+
+  const original = el.textContent ?? "";
+  if (!original.trim()) return [];
+
+  // Tokenize words + whitespace — keep separators to rebuild faithfully.
+  const tokens = original.split(/(\s+)/);
+  el.textContent = "";
+  const wordSpans: HTMLSpanElement[] = [];
+
+  for (const tok of tokens) {
+    if (!tok) continue;
+    if (/^\s+$/.test(tok)) {
+      el.appendChild(document.createTextNode(tok));
+    } else {
+      const span = document.createElement("span");
+      span.textContent = tok;
+      span.style.display = "inline-block";
+      el.appendChild(span);
+      wordSpans.push(span);
+    }
+  }
+
+  // Group words into lines by their offsetTop.
+  interface Line {
+    readonly top: number;
+    readonly words: HTMLSpanElement[];
+  }
+  const lines: Line[] = [];
+  for (const span of wordSpans) {
+    const top = span.offsetTop;
+    const last = lines.at(-1);
+    if (last && Math.abs(last.top - top) < 2) {
+      last.words.push(span);
+    } else {
+      lines.push({ top, words: [span] });
+    }
+  }
+
+  // Rebuild the element with a per-line mask structure.
+  el.textContent = "";
+  const inners: HTMLElement[] = [];
+  for (const line of lines) {
+    const wrap = document.createElement("span");
+    wrap.style.display = "block";
+    wrap.style.overflow = "hidden";
+    // Guard against descender clipping during the reveal.
+    wrap.style.paddingBottom = "0.08em";
+    wrap.style.marginBottom = "-0.08em";
+
+    const inner = document.createElement("span");
+    inner.style.display = "block";
+    inner.style.willChange = "transform";
+    inner.textContent = line.words.map((w) => w.textContent).join(" ");
+
+    wrap.appendChild(inner);
+    el.appendChild(wrap);
+    inners.push(inner);
+  }
+
+  markable[LINE_SPLIT_MARKER] = true;
+  return inners;
+}
+
+export function useScrollReveal<T extends HTMLElement = HTMLElement>(
+  options: ScrollRevealOptions = {},
+): RefObject<T | null> {
+  const {
+    selector = "[data-reveal]",
+    linesSelector = "[data-lines]",
+    y = 16,
+    duration = motionDuration.base,
+    stagger = motionStagger.base,
+    lineStagger = 0.06,
+    start = "top 70%",
+    ease = motionEase.precise,
+    delay = 0,
+  } = options;
+
+  const containerRef = useRef<T | null>(null);
+  const reducedMotion = usePrefersReducedMotion();
+
+  useGSAP(
+    () => {
+      const root = containerRef.current;
+      if (!root) return;
+
+      const fadeTargets = Array.from(
+        root.querySelectorAll<HTMLElement>(selector),
+      );
+      const lineTargets = Array.from(
+        root.querySelectorAll<HTMLElement>(linesSelector),
+      );
+
+      if (reducedMotion) {
+        if (fadeTargets.length > 0) {
+          gsap.set(fadeTargets, { opacity: 1, y: 0, clearProps: "transform" });
+        }
+        return;
+      }
+
+      const allLineInners: HTMLElement[] = [];
+      for (const el of lineTargets) {
+        const inners = splitTextIntoLines(el);
+        allLineInners.push(...inners);
+      }
+
+      if (fadeTargets.length > 0) {
+        gsap.set(fadeTargets, { opacity: 0, y });
+      }
+      if (allLineInners.length > 0) {
+        gsap.set(allLineInners, { yPercent: 110 });
+      }
+
+      const tl = gsap.timeline({
+        delay,
+        scrollTrigger: {
+          trigger: root,
+          start,
+          toggleActions: "play none none reverse",
+        },
+      });
+
+      if (allLineInners.length > 0) {
+        tl.to(
+          allLineInners,
+          {
+            yPercent: 0,
+            duration: motionDuration.medium,
+            ease,
+            stagger: lineStagger,
+          },
+          0,
+        );
+      }
+
+      if (fadeTargets.length > 0) {
+        tl.to(
+          fadeTargets,
+          {
+            opacity: 1,
+            y: 0,
+            duration,
+            ease,
+            stagger,
+          },
+          allLineInners.length > 0 ? 0.1 : 0,
+        );
+      }
+
+      return () => {
+        tl.scrollTrigger?.kill();
+        tl.kill();
+      };
+    },
+    {
+      scope: containerRef as RefObject<HTMLElement>,
+      dependencies: [
+        reducedMotion,
+        selector,
+        linesSelector,
+        y,
+        duration,
+        stagger,
+        lineStagger,
+        start,
+        ease,
+        delay,
+      ],
+    },
+  );
+
+  void ScrollTrigger;
+  return containerRef;
+}

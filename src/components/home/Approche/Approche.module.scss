@@ -1,0 +1,90 @@
+@use "styles/variables" as *;
+@use "styles/mixins" as *;
+
+.root {
+  padding-block: $section-spacing;
+  border-top: 1px solid $color-line;
+}
+
+.inner {
+  @include container;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-5;
+
+  @include desktop-up {
+    grid-template-columns: minmax(0, 40fr) minmax(0, 60fr);
+    column-gap: $space-6;
+    align-items: start;
+  }
+}
+
+.lead {
+  @include font-body($font-body-l);
+  color: $color-fg-secondary;
+  max-width: 36rem;
+}
+
+.right {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+}
+
+.index {
+  @include font-label;
+  color: $color-fg-muted;
+}
+
+.skills {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  border-top: 1px solid $color-line;
+
+  @include tablet-up {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.skill {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: $space-3;
+  row-gap: $space-1;
+  padding-block: $space-3;
+  border-bottom: 1px solid $color-line;
+
+  @include tablet-up {
+    padding-inline: $space-3;
+    border-right: 1px solid $color-line;
+
+    &:nth-child(2n) {
+      border-right: 0;
+    }
+  }
+}
+
+.skillIndex {
+  @include font-label($font-label-sm);
+  color: $color-fg-muted;
+  grid-row: 1;
+  grid-column: 1;
+  padding-top: 0.4em;
+}
+
+.skillLabel {
+  @include font-display($font-display-s);
+  color: $color-fg;
+  grid-row: 1;
+  grid-column: 2;
+}
+
+.skillDetail {
+  @include font-body($font-body-s);
+  color: $color-fg-muted;
+  grid-row: 2;
+  grid-column: 2;
+  max-width: 28rem;
+}

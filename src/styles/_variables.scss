@@ -1,0 +1,125 @@
+@use "sass:color";
+
+// -----------------------------------------------------------------------------
+// COLOR — dark editorial, no saturated accent in V1
+// Mirror of .claude/context/design-system.md §Color
+// -----------------------------------------------------------------------------
+
+$color-bg: #0a0a0a;
+$color-bg-elev: #111111;
+
+$color-fg: #ffffff;
+$color-fg-secondary: #eaeaea;
+$color-fg-muted: #888888;
+$color-fg-subtle: #555555;
+
+$color-line: rgba(255, 255, 255, 0.1);
+$color-line-subtle: rgba(255, 255, 255, 0.05);
+
+// -----------------------------------------------------------------------------
+// TYPOGRAPHY — fluid editorial scale
+// Families are served by next/font via CSS variables on <body>
+// -----------------------------------------------------------------------------
+
+$font-display: var(--font-display);
+$font-body: var(--font-body);
+$font-mono: var(--font-mono);
+
+$font-display-xl: clamp(3.5rem, 10vw + 1rem, 10rem);
+$font-display-l: clamp(2.5rem, 5vw + 1rem, 6rem);
+$font-display-m: clamp(1.75rem, 2.5vw + 1rem, 3rem);
+$font-display-s: clamp(1.375rem, 1.5vw + 1rem, 2rem);
+
+$font-body-l: clamp(1.125rem, 0.5vw + 1rem, 1.375rem);
+$font-body-m: 1rem;
+$font-body-s: 0.9375rem;
+
+$font-label: 0.75rem;
+$font-label-sm: 0.6875rem;
+
+// -----------------------------------------------------------------------------
+// SPACING — base-8 rhythm + editorial epic steps
+// -----------------------------------------------------------------------------
+
+$space-1: 0.5rem;
+$space-2: 1rem;
+$space-3: 1.5rem;
+$space-4: 2.5rem;
+$space-5: 4rem;
+$space-6: 6rem;
+$space-7: 9rem;
+$space-epic: 14rem;
+
+$section-spacing: clamp(5rem, 10vw, 12rem);
+$section-spacing-hero: clamp(7rem, 15vw, 16rem);
+$gutter: clamp(1.25rem, 2vw, 2rem);
+
+// -----------------------------------------------------------------------------
+// GRID
+// -----------------------------------------------------------------------------
+
+$grid-columns-desktop: 12;
+$grid-columns-tablet: 6;
+$grid-columns-mobile: 4;
+$grid-max-width: 1440px;
+$grid-row-gap: $space-4;
+
+// -----------------------------------------------------------------------------
+// MOTION — sober, precise, editorial
+// Keep in sync with src/lib/motion.ts (GSAP cannot read CSS custom properties)
+// -----------------------------------------------------------------------------
+
+$motion-duration-fast: 0.2s;
+$motion-duration-base: 0.6s;
+$motion-duration-medium: 0.9s;
+$motion-duration-slow: 1.2s;
+
+$motion-stagger-tight: 0.05s;
+$motion-stagger-base: 0.08s;
+$motion-stagger-loose: 0.15s;
+
+$motion-ease-base: cubic-bezier(0.215, 0.61, 0.355, 1);
+$motion-ease-soft: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+$motion-ease-precise: cubic-bezier(0.19, 1, 0.22, 1);
+$motion-ease-linear: linear;
+
+// -----------------------------------------------------------------------------
+// BORDERS & RADII
+// -----------------------------------------------------------------------------
+
+$radius-none: 0;
+$radius-xs: 2px;
+
+// -----------------------------------------------------------------------------
+// SHADOWS — none in V1
+// -----------------------------------------------------------------------------
+
+$shadow-none: none;
+
+// -----------------------------------------------------------------------------
+// Z-INDEX
+// -----------------------------------------------------------------------------
+
+$z-base: 0;
+$z-content: 10;
+$z-sticky: 100;
+$z-overlay: 200;
+$z-modal: 300;
+$z-toast: 400;
+$z-top: 500;
+
+// -----------------------------------------------------------------------------
+// BREAKPOINTS
+// -----------------------------------------------------------------------------
+
+$bp-tablet: 768px;
+$bp-desktop: 1024px;
+$bp-large: 1440px;
+
+// -----------------------------------------------------------------------------
+// SHELL-SPECIFIC
+// -----------------------------------------------------------------------------
+
+$header-height-desktop: 72px;
+$header-height-mobile: 64px;
+$header-scroll-threshold: 40px;

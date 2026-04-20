@@ -1,0 +1,205 @@
+@use "styles/variables" as *;
+@use "styles/mixins" as *;
+
+.root {
+  position: relative;
+  min-height: 100dvh;
+  padding-top: calc(#{$header-height-mobile} + #{$space-4});
+  padding-bottom: $gutter;
+  overflow: hidden;
+
+  @include tablet-up {
+    padding-top: calc(#{$header-height-desktop} + #{$space-4});
+  }
+}
+
+.portrait {
+  display: none;
+
+  @include tablet-up {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: $gutter;
+    bottom: calc(#{$gutter} + 42px);
+    width: calc(40vw - #{$gutter});
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  @include desktop-up {
+    width: calc(38vw - #{$gutter});
+    bottom: calc(#{$gutter} + 54px);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(10, 10, 10, 0) 40%,
+      rgba(10, 10, 10, 0.55) 75%,
+      rgba(10, 10, 10, 0.9) 100%
+    );
+    pointer-events: none;
+  }
+}
+
+.portraitImg {
+  object-fit: cover;
+  object-position: center;
+}
+
+.inner {
+  @include container;
+  position: relative;
+  z-index: 1;
+  min-height: calc(100dvh - #{$header-height-mobile} - #{$space-4} - $gutter);
+  display: grid;
+  grid-template-rows: 1fr auto auto auto;
+
+  @include tablet-up {
+    min-height: calc(
+      100dvh - #{$header-height-desktop} - #{$space-4} - $gutter
+    );
+  }
+}
+
+.topRight {
+  grid-row: 1;
+  align-self: center;
+  justify-self: end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: $space-3;
+  max-width: 34rem;
+  padding-top: $space-6;
+
+  @include desktop-up {
+    gap: $space-4;
+    max-width: 36rem;
+    padding-top: $space-7;
+  }
+}
+
+.ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+  justify-content: flex-end;
+}
+
+.ctaPrimary {
+  @include font-body($font-body-s);
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  padding: 0.625rem $space-3;
+  color: $color-fg;
+  background-color: transparent;
+  border: 1px solid $color-line;
+  border-radius: 999px;
+  transition:
+    background-color $motion-duration-fast $motion-ease-soft,
+    color $motion-duration-fast $motion-ease-soft,
+    border-color $motion-duration-fast $motion-ease-soft;
+
+  svg {
+    transition: transform $motion-duration-fast $motion-ease-soft;
+  }
+
+  &:hover {
+    background-color: $color-fg;
+    color: $color-bg;
+    border-color: $color-fg;
+
+    svg {
+      transform: translateX(3px);
+    }
+  }
+}
+
+.ctaSecondary {
+  @include font-body($font-body-s);
+  padding: 0.625rem $space-3;
+  color: $color-fg;
+  background-color: transparent;
+  border: 1px solid $color-line;
+  border-radius: 999px;
+  transition:
+    background-color $motion-duration-fast $motion-ease-soft,
+    color $motion-duration-fast $motion-ease-soft,
+    border-color $motion-duration-fast $motion-ease-soft;
+
+  &:hover {
+    background-color: $color-fg;
+    color: $color-bg;
+    border-color: $color-fg;
+  }
+}
+
+.lead {
+  @include font-body($font-body-l);
+  color: $color-fg-secondary;
+  text-align: right;
+  max-width: 34rem;
+}
+
+.titleEyebrow {
+  grid-row: 2;
+  justify-self: start;
+  @include font-body($font-display-s);
+  font-style: italic;
+  font-weight: 300;
+  color: $color-fg-muted;
+  margin-top: $space-5;
+  margin-left: 0.45em;
+  margin-bottom: -0.5em;
+}
+
+.title {
+  grid-row: 3;
+  font-family: $font-display;
+  font-size: clamp(3rem, 14vw, 17rem);
+  font-weight: 500;
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+  color: $color-fg;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 0.25em;
+  width: 100%;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  margin-top: $space-2;
+}
+
+.titleWord {
+  display: block;
+  will-change: transform, opacity;
+  white-space: nowrap;
+}
+
+.divider {
+  grid-row: 4;
+  height: 42px;
+  width: 100%;
+  margin-top: $space-4;
+  background: linear-gradient(
+    90deg,
+    #4a9eb0 0%,
+    #5f9396 18%,
+    #7a8a7a 38%,
+    #9a8560 58%,
+    #c38146 78%,
+    #e0883a 100%
+  );
+
+  @include tablet-up {
+    height: 54px;
+  }
+}

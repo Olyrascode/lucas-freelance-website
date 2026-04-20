@@ -1,0 +1,138 @@
+@use "styles/variables" as *;
+@use "styles/mixins" as *;
+
+.root {
+  padding-top: calc(#{$header-height-mobile} + #{$space-6});
+  padding-bottom: $section-spacing;
+
+  @include tablet-up {
+    padding-top: calc(#{$header-height-desktop} + #{$space-7});
+  }
+}
+
+.inner {
+  @include container;
+}
+
+// --- Hero block ----------------------------------------------------------
+
+.hero {
+  padding-bottom: $section-spacing;
+}
+
+.hero .inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-3;
+
+  @include desktop-up {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+    grid-template-rows: auto auto;
+    column-gap: $space-5;
+    row-gap: $space-3;
+    align-items: start;
+  }
+}
+
+.heroEyebrow {
+  @include font-label;
+  color: $color-fg-muted;
+
+  @include desktop-up {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+.heroTitle {
+  font-family: $font-display;
+  font-size: clamp(3.5rem, 12vw, 14rem);
+  font-weight: 500;
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+  color: $color-fg;
+  text-transform: uppercase;
+
+  @include desktop-up {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+
+.heroLead {
+  @include font-body($font-body-l);
+  color: $color-fg-secondary;
+  max-width: 36rem;
+
+  @include desktop-up {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    padding-top: 8px;
+  }
+}
+
+// --- Subsections ---------------------------------------------------------
+
+.section {
+  padding-block: $space-6;
+  border-top: 1px solid $color-line;
+
+  @include desktop-up {
+    padding-block: $space-7;
+  }
+}
+
+.section .inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-3;
+
+  @include desktop-up {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+    grid-template-rows: auto auto;
+    column-gap: $space-5;
+    row-gap: $space-3;
+    align-items: start;
+  }
+}
+
+.sectionIndex {
+  @include font-label;
+  color: $color-fg-muted;
+
+  @include desktop-up {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+.sectionTitle {
+  @include font-display($font-display-l);
+  color: $color-fg;
+
+  @include desktop-up {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+
+.sectionBody {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  @include font-body($font-body-l);
+  color: $color-fg-secondary;
+  max-width: 40rem;
+
+  @include desktop-up {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    padding-top: 8px;
+  }
+
+  p {
+    margin: 0;
+  }
+}
