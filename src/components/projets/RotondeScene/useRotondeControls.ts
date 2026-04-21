@@ -15,7 +15,9 @@ import {
 
 // --- Tuning constants ----------------------------------------------------
 
-const DRAG_SENSITIVITY = 0.002; // rad per px
+const DRAG_SENSITIVITY = 0.002; // rad per px (horizontal — yaw)
+const PITCH_SENSITIVITY = 0.0015; // rad per px (vertical — camera tilt)
+const PITCH_MAX = Math.PI / 9; // ±20° tilt cap, keeps the rotonde framed
 const WHEEL_SENSITIVITY = 0.0002; // rad per delta unit
 // Arrow-key step — one slot width, but the rotation is NOT snapped to a
 // rounded multiple (no verrouillage). It simply adds/subtracts from the
@@ -39,7 +41,9 @@ export function useRotondeControls(
   const target = useRef<number | null>(null);
   const isDragging = useRef(false);
   const dragLastX = useRef(0);
+  const dragLastY = useRef(0);
   const dragMovedPx = useRef(0);
+  const pitch = useRef(0);
   const activePointerId = useRef<number | null>(null);
 
   useEffect(() => {
@@ -50,6 +54,7 @@ export function useRotondeControls(
       if (getOpenSlug() !== null) return;
       isDragging.current = true;
       dragLastX.current = event.clientX;
+      dragLastY.current = event.clientY;
       activePointerId.current = event.pointerId;
       target.current = null;
       momentum.current = 0;
@@ -72,13 +77,25 @@ export function useRotondeControls(
         return;
       }
       const dx = event.clientX - dragLastX.current;
+      const dy = event.clientY - dragLastY.current;
       dragLastX.current = event.clientX;
-      // Drag right should bring the NEXT project into view (forward
-      // direction): rotation decreases as dx increases.
-      const delta = -dx * DRAG_SENSITIVITY;
-      rotation.current += delta;
-      momentum.current = delta;
-      dragMovedPx.current += Math.abs(dx);
+      dragLastY.current = event.clientY;
+
+      // Horizontal — drag right brings the NEXT project into view.
+      const yawDelta = -dx * DRAG_SENSITIVITY;
+      rotation.current += yawDelta;
+      momentum.current = yawDelta;
+
+      // Vertical — drag up tilts the camera DOWN (carousel-style: drag
+      // pulls the rotonde toward you). Clamped so the user can't flip past
+      // the top/bottom row entirely.
+      const pitchDelta = dy * PITCH_SENSITIVITY;
+      pitch.current = Math.max(
+        -PITCH_MAX,
+        Math.min(PITCH_MAX, pitch.current + pitchDelta),
+      );
+
+      dragMovedPx.current += Math.abs(dx) + Math.abs(dy);
       setDragMoved(dragMovedPx.current);
     };
 
@@ -156,9 +173,12 @@ export function useRotondeControls(
     };
   }, [gl]);
 
-  useFrame((_state, delta) => {
+  useFrame((state, delta) => {
     const group = groupRef.current;
     if (!group) return;
+    // Pull camera off the per-frame state — that's a parameter, not a
+    // hook return, so the immutability lint doesn't follow through.
+    const cam = state.camera;
 
     if (reducedMotion) {
       // Snap targets instantly, no inertia, no lerp.
@@ -168,13 +188,15 @@ export function useRotondeControls(
       }
       momentum.current = 0;
       group.rotation.y = rotation.current;
+      cam.rotation.x = pitch.current;
       setRotation(rotation.current);
       return;
     }
 
     if (isDragging.current) {
-      // rotation is being set directly by the drag handler
+      // rotation + pitch are being set directly by the drag handler
       group.rotation.y = rotation.current;
+      cam.rotation.x = pitch.current;
       setRotation(rotation.current);
       return;
     }
@@ -196,6 +218,7 @@ export function useRotondeControls(
     }
 
     group.rotation.y = rotation.current;
+    cam.rotation.x = pitch.current;
     setRotation(rotation.current);
   });
 }
