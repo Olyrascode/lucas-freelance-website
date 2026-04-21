@@ -92,6 +92,62 @@ const ROWS: readonly RowConfig[] = [
   },
 ];
 
+// Mirror "ghost" rows above and below — pure visual depth, not clickable,
+// no animations. The vertical scale is flipped so the planes look like
+// reflections off a ceiling / floor mirror.
+type GhostRow = {
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+  readonly angleOffset: number;
+  readonly projectOrder: readonly number[];
+  readonly opacity: number;
+  readonly mirrorY: boolean;
+};
+
+const GHOST_ROWS: readonly GhostRow[] = [
+  // Above the top row — first reflection (upside-down)
+  {
+    y: 9.5,
+    w: SIDE_PLANE_W,
+    h: SIDE_PLANE_H,
+    angleOffset: 0,
+    projectOrder: cyclicShift(CANONICAL_ORDER, 1),
+    opacity: 0.45,
+    mirrorY: true,
+  },
+  // Above that — second bounce (right-side-up, smaller, fainter)
+  {
+    y: 14,
+    w: SIDE_PLANE_W * 0.85,
+    h: SIDE_PLANE_H * 0.85,
+    angleOffset: SIDE_OFFSET_ANGLE,
+    projectOrder: cyclicShift(CANONICAL_ORDER, 6),
+    opacity: 0.22,
+    mirrorY: false,
+  },
+  // Below the bottom row — first reflection (upside-down)
+  {
+    y: -9.5,
+    w: SIDE_PLANE_W,
+    h: SIDE_PLANE_H,
+    angleOffset: 0,
+    projectOrder: cyclicShift(CANONICAL_ORDER, 7),
+    opacity: 0.45,
+    mirrorY: true,
+  },
+  // Below that — second bounce
+  {
+    y: -14,
+    w: SIDE_PLANE_W * 0.85,
+    h: SIDE_PLANE_H * 0.85,
+    angleOffset: SIDE_OFFSET_ANGLE,
+    projectOrder: cyclicShift(CANONICAL_ORDER, 2),
+    opacity: 0.22,
+    mirrorY: false,
+  },
+];
+
 const HOVER_SCALE = 1.03;
 
 // Scale curve as a plane leaves the camera front axis.
@@ -137,6 +193,29 @@ interface MaterialWithShader extends MeshBasicMaterial {
 }
 
 const planeMaterialRegistry = new Map<string, MaterialWithShader>();
+
+// Ghost-material registry — opaque-less MeshBasicMaterial clones for the
+// non-interactive mirror rows. Keyed by (texture, opacityBucket) so each
+// rendered ghost shares its material when it shares both.
+const ghostMaterialRegistry = new Map<string, MeshBasicMaterial>();
+
+function getGhostMaterial(
+  texture: Texture,
+  opacity: number,
+): MeshBasicMaterial {
+  const key = `${texture.uuid}@${opacity.toFixed(2)}`;
+  const cached = ghostMaterialRegistry.get(key);
+  if (cached) return cached;
+  const mat = new MeshBasicMaterial({
+    map: texture,
+    toneMapped: false,
+    transparent: true,
+    opacity,
+    depthWrite: false,
+  });
+  ghostMaterialRegistry.set(key, mat);
+  return mat;
+}
 
 // Curved plane geometry cache — one shared geometry per (width, height)
 // pair. Each plane's vertices are pushed toward the camera so the whole
@@ -297,7 +376,70 @@ function Rows(): React.ReactElement {
           })}
         </group>
       ))}
+
+      {/* Mirror "ghost" rows — visual depth only, never interactive */}
+      {GHOST_ROWS.map((row, ghostIdx) => (
+        <group key={`ghost-${ghostIdx}`}>
+          {Array.from({ length: SLOTS_PER_ROW }).map((_, slotIdx) => {
+            const projectIdx = row.projectOrder[slotIdx] ?? 0;
+            const texture = textures[projectIdx];
+            if (!texture) return null;
+
+            const angle = slotIdx * ANGLE_STEP + row.angleOffset;
+            const x = Math.sin(angle) * RADIUS;
+            const z = -Math.cos(angle) * RADIUS;
+
+            return (
+              <GhostPlane
+                key={`g-${ghostIdx}-${slotIdx}`}
+                texture={texture}
+                position={[x, row.y, z]}
+                rotationY={-angle}
+                planeW={row.w}
+                planeH={row.h}
+                opacity={row.opacity}
+                mirrorY={row.mirrorY}
+              />
+            );
+          })}
+        </group>
+      ))}
     </group>
+  );
+}
+
+// -------------------------------------------------------------------
+// GhostPlane — non-interactive, no animation, optional Y flip
+// -------------------------------------------------------------------
+
+interface GhostPlaneProps {
+  readonly texture: Texture;
+  readonly position: [number, number, number];
+  readonly rotationY: number;
+  readonly planeW: number;
+  readonly planeH: number;
+  readonly opacity: number;
+  readonly mirrorY: boolean;
+}
+
+function GhostPlane({
+  texture,
+  position,
+  rotationY,
+  planeW,
+  planeH,
+  opacity,
+  mirrorY,
+}: GhostPlaneProps): React.ReactElement {
+  const material = getGhostMaterial(texture, opacity);
+  const geometry = getCurvedPlaneGeometry(planeW, planeH, RADIUS);
+  const scale: [number, number, number] = mirrorY ? [1, -1, 1] : [1, 1, 1];
+
+  return (
+    <mesh position={position} rotation={[0, rotationY, 0]} scale={scale}>
+      <primitive object={geometry} attach="geometry" />
+      <primitive object={material} attach="material" />
+    </mesh>
   );
 }
 
@@ -412,6 +554,8 @@ function ProjectLabels({ project }: ProjectLabelsProps): React.ReactElement {
         anchorY="bottom"
         letterSpacing={0.12}
         position={[-MAIN_HALF_W, INDEX_Y, 0]}
+        // @ts-expect-error troika-three-text supports curveRadius at runtime; drei's TS prop list is incomplete.
+        curveRadius={-RADIUS}
       >
         {indexLabel}
       </Text>
@@ -425,6 +569,8 @@ function ProjectLabels({ project }: ProjectLabelsProps): React.ReactElement {
         letterSpacing={-0.02}
         position={[-MAIN_HALF_W, NAME_Y, 0]}
         maxWidth={MAIN_PLANE_W * 1.1}
+        // @ts-expect-error troika-three-text supports curveRadius at runtime; drei's TS prop list is incomplete.
+        curveRadius={-RADIUS}
       >
         {project.name}
       </Text>
@@ -437,6 +583,8 @@ function ProjectLabels({ project }: ProjectLabelsProps): React.ReactElement {
         anchorY="top"
         letterSpacing={0.12}
         position={[-MAIN_HALF_W, META_Y, 0]}
+        // @ts-expect-error troika-three-text supports curveRadius at runtime; drei's TS prop list is incomplete.
+        curveRadius={-RADIUS}
       >
         {metaLabel.toUpperCase()}
       </Text>
