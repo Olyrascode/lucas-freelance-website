@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Manrope, Inter, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { Header } from "@/components/Header/Header";
-import { Footer } from "@/components/Footer/Footer";
+import { FooterGate } from "@/components/Footer/FooterGate";
 import { SkipLink } from "@/components/SkipLink/SkipLink";
 import { SmoothScrollProvider } from "@/components/SmoothScrollProvider/SmoothScrollProvider";
 import {
@@ -83,7 +83,7 @@ export default function RootLayout({
         <SmoothScrollProvider>
           <Header />
           <main id="main">{children}</main>
-          <Footer />
+          <FooterGate />
         </SmoothScrollProvider>
         <Analytics />
         <script

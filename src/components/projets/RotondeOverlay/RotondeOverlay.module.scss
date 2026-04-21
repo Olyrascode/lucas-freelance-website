@@ -1,0 +1,121 @@
+@use "styles/variables" as *;
+@use "styles/mixins" as *;
+
+.root {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: $z-content;
+  padding: calc(#{$header-height-mobile} + #{$space-3}) $gutter $space-4;
+
+  @include tablet-up {
+    padding: calc(#{$header-height-desktop} + #{$space-3}) $gutter $space-5;
+  }
+}
+
+// -------------------------------------------------------------------
+// 01 / 04 — top-left
+// -------------------------------------------------------------------
+
+.index {
+  @include font-label;
+  position: absolute;
+  top: calc(#{$header-height-mobile} + #{$space-3});
+  left: $gutter;
+  color: $color-fg;
+  margin: 0;
+
+  @include tablet-up {
+    top: calc(#{$header-height-desktop} + #{$space-4});
+  }
+}
+
+// -------------------------------------------------------------------
+// Interaction hint — bottom-center, fades out on first input
+// -------------------------------------------------------------------
+
+.hint {
+  position: absolute;
+  bottom: calc(#{$space-5} + 22px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  transition:
+    opacity $motion-duration-medium $motion-ease-precise,
+    transform $motion-duration-medium $motion-ease-precise;
+
+  &[data-hidden="true"] {
+    opacity: 0;
+    transform: translate(-50%, 6px);
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+.hintDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: $color-fg;
+  animation: hintPulse 1.8s ease-in-out infinite;
+
+  @include reduced-motion {
+    animation: none;
+  }
+}
+
+@keyframes hintPulse {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 1; }
+}
+
+.hintText {
+  @include font-label($font-label-sm);
+  color: $color-fg-muted;
+}
+
+// -------------------------------------------------------------------
+// Progress indicator — 4 segments at the bottom
+// -------------------------------------------------------------------
+
+.progress {
+  position: absolute;
+  bottom: $space-4;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include tablet-up {
+    bottom: $space-5;
+  }
+}
+
+.segment {
+  width: 44px;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.2);
+  transition:
+    background-color $motion-duration-fast $motion-ease-soft,
+    height $motion-duration-fast $motion-ease-soft,
+    width $motion-duration-fast $motion-ease-soft;
+
+  &[data-active="true"] {
+    background-color: $color-fg;
+    height: 2px;
+    width: 56px;
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
+}

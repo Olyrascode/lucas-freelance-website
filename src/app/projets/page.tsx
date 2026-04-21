@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PagePlaceholder } from "@/components/PagePlaceholder/PagePlaceholder";
+import { RotondeCanvas } from "@/components/projets/RotondeCanvas/RotondeCanvas";
 import { buildPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -10,11 +10,5 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default function ProjetsPage(): React.ReactElement {
-  return (
-    <PagePlaceholder
-      index="01 / PROJETS"
-      title="Projets"
-      description="Sélection de projets récents — sites éditoriaux, études personnelles, laboratoires créatifs."
-    />
-  );
+  return <RotondeCanvas />;
 }

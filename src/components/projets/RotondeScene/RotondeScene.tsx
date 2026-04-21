@@ -1,0 +1,445 @@
+"use client";
+
+import { Suspense, useMemo, useRef, useState } from "react";
+import { useFrame } from "@react-three/fiber";
+import { Text, useTexture } from "@react-three/drei";
+import {
+  MeshBasicMaterial,
+  PlaneGeometry,
+  SRGBColorSpace,
+  type BufferGeometry,
+  type Group,
+  type Mesh,
+  type Texture,
+  type WebGLProgramParametersWithUniforms,
+} from "three";
+import { projects, type Project } from "@/data/projects";
+import {
+  getDragMoved,
+  getRotation,
+  openProject,
+} from "@/components/projets/rotondeStore";
+import { useRotondeControls } from "./useRotondeControls";
+
+// -------------------------------------------------------------------
+// Geometry — 3 rows × 4 angular slots. Top & bottom are offset by 30°
+// from the center row and show different project permutations.
+// -------------------------------------------------------------------
+
+const SLOTS_PER_ROW = projects.length; // 8
+const RADIUS = 11;
+const ANGLE_STEP = (Math.PI * 2) / SLOTS_PER_ROW;
+const SIDE_OFFSET_ANGLE = Math.PI / 8; // 22.5° — half-slot, true quincunx
+
+// Main (center) row — dominant plane, labels attached.
+const MAIN_PLANE_W = 8;
+const MAIN_PLANE_H = 4.5; // 16:9
+const MAIN_HALF_W = MAIN_PLANE_W / 2;
+
+// Side rows — small editorial "accents".
+const SIDE_PLANE_W = 3;
+const SIDE_PLANE_H = 2; // close to 3:2
+
+type RowConfig = {
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+  readonly angleOffset: number;
+  readonly projectOrder: readonly number[];
+  readonly isMain: boolean;
+};
+
+// Same canonical sequence on every row, but cyclically shifted so each row
+// starts with a different project at slot 0. Relative order (Dexnill →
+// Kengo → Jacquemus → Fyconic → …) is preserved across all rows.
+const CANONICAL_ORDER: readonly number[] = [0, 1, 2, 3, 4, 5, 6, 7];
+
+function cyclicShift(
+  order: readonly number[],
+  shift: number,
+): readonly number[] {
+  const n = order.length;
+  return order.map((_, i) => order[(i + shift) % n] ?? 0);
+}
+
+const ROWS: readonly RowConfig[] = [
+  // Top — offset +22.5°, order shifted by +3
+  {
+    y: 4.5,
+    w: SIDE_PLANE_W,
+    h: SIDE_PLANE_H,
+    angleOffset: SIDE_OFFSET_ANGLE,
+    projectOrder: cyclicShift(CANONICAL_ORDER, 3),
+    isMain: false,
+  },
+  // Center — no offset, canonical order
+  {
+    y: 0,
+    w: MAIN_PLANE_W,
+    h: MAIN_PLANE_H,
+    angleOffset: 0,
+    projectOrder: CANONICAL_ORDER,
+    isMain: true,
+  },
+  // Bottom — same +22.5° offset as top, order shifted by +5
+  {
+    y: -4.5,
+    w: SIDE_PLANE_W,
+    h: SIDE_PLANE_H,
+    angleOffset: SIDE_OFFSET_ANGLE,
+    projectOrder: cyclicShift(CANONICAL_ORDER, 5),
+    isMain: false,
+  },
+];
+
+const HOVER_SCALE = 1.03;
+
+// Scale curve as a plane leaves the camera front axis.
+// At 0° (perfectly centered) → SCALE_FRONT; at 90° or beyond → SCALE_SIDE.
+const SCALE_FRONT = 1;
+const SCALE_SIDE = 0.6;
+const SCALE_LERP = 0.12;
+
+// -------------------------------------------------------------------
+// Typography
+// -------------------------------------------------------------------
+
+const MANROPE_FONT =
+  "https://cdn.jsdelivr.net/fontsource/fonts/manrope@latest/latin-500-normal.woff";
+const MONO_FONT =
+  "https://cdn.jsdelivr.net/fontsource/fonts/jetbrains-mono@latest/latin-400-normal.woff";
+
+const INDEX_SIZE = 0.16;
+const NAME_SIZE = 0.38;
+const META_SIZE = 0.13;
+
+const INDEX_Y = 3.05;
+const NAME_Y = 2.45;
+const META_Y = -2.45;
+
+const COLOR_FG = "#ffffff";
+const COLOR_FG_MUTED = "#888888";
+const COLOR_FG_SUBTLE = "#555555";
+
+const TOTAL_SLOTS = SLOTS_PER_ROW.toString().padStart(2, "0");
+
+// -------------------------------------------------------------------
+// Saturation via onBeforeCompile on MeshBasicMaterial — canonical three.js
+// pattern to extend a built-in material with a custom per-instance uniform.
+// Each plane stores its material in a module-level registry so it survives
+// React 19 / StrictMode remounts.
+// -------------------------------------------------------------------
+
+type InjectedShader = WebGLProgramParametersWithUniforms;
+
+interface MaterialWithShader extends MeshBasicMaterial {
+  userData: { shader?: InjectedShader };
+}
+
+const planeMaterialRegistry = new Map<string, MaterialWithShader>();
+
+// Curved plane geometry cache — one shared geometry per (width, height)
+// pair. Each plane's vertices are pushed toward the camera so the whole
+// surface lies on a sphere of radius RADIUS (the cylinder inner wall).
+const curvedGeometryCache = new Map<string, BufferGeometry>();
+
+const CURVE_SEGMENTS = 16;
+
+function getCurvedPlaneGeometry(
+  width: number,
+  height: number,
+  radius: number,
+): BufferGeometry {
+  const key = `${width}x${height}@${radius}`;
+  const cached = curvedGeometryCache.get(key);
+  if (cached) return cached;
+
+  const geo = new PlaneGeometry(width, height, CURVE_SEGMENTS, 1);
+  const pos = geo.attributes.position;
+  if (pos) {
+    const arr = pos.array as Float32Array;
+    const r2 = radius * radius;
+    for (let i = 0; i < arr.length; i += 3) {
+      const x = arr[i] ?? 0;
+      const xClamped = Math.min(Math.abs(x), radius);
+      const zOffset = radius - Math.sqrt(r2 - xClamped * xClamped);
+      arr[i + 2] = zOffset;
+    }
+    pos.needsUpdate = true;
+  }
+  geo.computeVertexNormals();
+  curvedGeometryCache.set(key, geo);
+  return geo;
+}
+
+function getOrCreatePlaneMaterial(
+  key: string,
+  texture: Texture,
+): MaterialWithShader {
+  const cached = planeMaterialRegistry.get(key);
+  if (cached) {
+    if (cached.map !== texture) {
+      cached.map = texture;
+      cached.needsUpdate = true;
+    }
+    return cached;
+  }
+
+  const mat = new MeshBasicMaterial({
+    map: texture,
+    toneMapped: false,
+  }) as MaterialWithShader;
+
+  // Force three.js to compile a *distinct* shader program for each plane.
+  // Without this, two materials with identical generated source share
+  // the same compiled program, and `onBeforeCompile` only runs once (for
+  // the first one to render) — so only the first material ends up with
+  // its `userData.shader` populated, breaking every other plane's uniform
+  // updates. Keying the cache on planeKey guarantees per-plane compilation.
+  mat.customProgramCacheKey = () => `plane-${key}`;
+
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.uSaturation = { value: 1 };
+    shader.fragmentShader =
+      "uniform float uSaturation;\n" +
+      shader.fragmentShader.replace(
+        "#include <map_fragment>",
+        `
+        #include <map_fragment>
+        float mapGrayLuma = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+        diffuseColor.rgb = mix(vec3(mapGrayLuma), diffuseColor.rgb, uSaturation);
+        `,
+      );
+    mat.userData.shader = shader;
+  };
+
+  planeMaterialRegistry.set(key, mat);
+  return mat;
+}
+
+function computeFrontness(slotAngle: number, rotation: number): number {
+  // A slot is at the camera front when slotAngle - rotation = 0.
+  // (Three.js Y-rotation takes a point at initial angle α to world angle
+  //  α − θ after group.rotation.y = θ.)
+  let delta = (slotAngle - rotation) % (Math.PI * 2);
+  if (delta > Math.PI) delta -= Math.PI * 2;
+  if (delta < -Math.PI) delta += Math.PI * 2;
+  const absDeg = Math.abs(delta) * (180 / Math.PI);
+  return Math.max(0, Math.min(1, 1 - absDeg / 90));
+}
+
+// -------------------------------------------------------------------
+// Scene root
+// -------------------------------------------------------------------
+
+export function RotondeScene(): React.ReactElement {
+  const groupRef = useRef<Group>(null);
+  useRotondeControls(groupRef);
+
+  return (
+    <>
+      <fogExp2 attach="fog" args={["#050505", 0.035]} />
+      <ambientLight intensity={0.65} />
+
+      <group ref={groupRef}>
+        <Suspense fallback={null}>
+          <Rows />
+        </Suspense>
+      </group>
+    </>
+  );
+}
+
+// -------------------------------------------------------------------
+// Rows
+// -------------------------------------------------------------------
+
+function Rows(): React.ReactElement {
+  const imagePaths = useMemo(() => projects.map((p) => p.image), []);
+  const raw = useTexture(imagePaths, (loaded) => {
+    const arr = Array.isArray(loaded) ? loaded : [loaded];
+    for (const t of arr) {
+      t.colorSpace = SRGBColorSpace;
+      t.anisotropy = 8;
+    }
+  });
+  const textures = Array.isArray(raw) ? (raw as Texture[]) : [raw as Texture];
+
+  return (
+    <group>
+      {ROWS.map((row, rowIdx) => (
+        <group key={`row-${rowIdx}`}>
+          {Array.from({ length: SLOTS_PER_ROW }).map((_, slotIdx) => {
+            const projectIdx = row.projectOrder[slotIdx] ?? 0;
+            const project = projects[projectIdx];
+            const texture = textures[projectIdx];
+            if (!project || !texture) return null;
+
+            const angle = slotIdx * ANGLE_STEP + row.angleOffset;
+            const x = Math.sin(angle) * RADIUS;
+            const z = -Math.cos(angle) * RADIUS;
+
+            const planeKey = `${rowIdx}-${slotIdx}`;
+            return (
+              <ProjectPlane
+                key={planeKey}
+                planeKey={planeKey}
+                project={project}
+                texture={texture}
+                slotAngle={angle}
+                position={[x, row.y, z]}
+                rotationY={-angle}
+                planeW={row.w}
+                planeH={row.h}
+                showLabels={row.isMain}
+              />
+            );
+          })}
+        </group>
+      ))}
+    </group>
+  );
+}
+
+// -------------------------------------------------------------------
+// A single plane (with optional labels if it's the main row)
+// -------------------------------------------------------------------
+
+interface ProjectPlaneProps {
+  readonly planeKey: string;
+  readonly project: Project;
+  readonly texture: Texture;
+  readonly slotAngle: number;
+  readonly position: [number, number, number];
+  readonly rotationY: number;
+  readonly planeW: number;
+  readonly planeH: number;
+  readonly showLabels: boolean;
+}
+
+function ProjectPlane({
+  planeKey,
+  project,
+  texture,
+  slotAngle,
+  position,
+  rotationY,
+  planeW,
+  planeH,
+  showLabels,
+}: ProjectPlaneProps): React.ReactElement {
+  const meshRef = useRef<Mesh>(null);
+  const [hovered, setHovered] = useState(false);
+
+  // Module-level material registry — each plane has its own
+  // MeshBasicMaterial with an injected `uSaturation` uniform set up via
+  // onBeforeCompile. This survives React 19 strict-mode remounts and has
+  // none of the reconciliation edge cases that <shaderMaterial> hits.
+  const material = getOrCreatePlaneMaterial(planeKey, texture);
+  const geometry = getCurvedPlaneGeometry(planeW, planeH, RADIUS);
+
+  useFrame(() => {
+    const frontness = computeFrontness(slotAngle, getRotation());
+
+    const mesh = meshRef.current;
+    if (mesh) {
+      const baseScale = SCALE_SIDE + (SCALE_FRONT - SCALE_SIDE) * frontness;
+      const hoverMul = hovered ? HOVER_SCALE : 1;
+      const targetScale = baseScale * hoverMul;
+      const next = mesh.scale.x + (targetScale - mesh.scale.x) * SCALE_LERP;
+      mesh.scale.set(next, next, next);
+    }
+
+    // Look the material up fresh from the registry each frame so we
+    // don't capture a local variable that the immutability rule flags
+    // as "mutated after render". The shader is only attached after the
+    // first compilation — until then, uSaturation stays at its default 1.
+    const m = planeMaterialRegistry.get(planeKey);
+    const shader = m?.userData.shader;
+    if (shader?.uniforms?.uSaturation) {
+      shader.uniforms.uSaturation.value = frontness;
+    }
+  });
+
+  return (
+    <group position={position} rotation={[0, rotationY, 0]}>
+      <mesh
+        ref={meshRef}
+        name={project.slug}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+          document.body.style.cursor = "pointer";
+        }}
+        onPointerOut={() => {
+          setHovered(false);
+          document.body.style.cursor = "";
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (getDragMoved() > 6) return;
+          openProject(project.slug);
+        }}
+      >
+        <primitive object={geometry} attach="geometry" />
+        <primitive object={material} attach="material" />
+      </mesh>
+
+      {showLabels ? <ProjectLabels project={project} /> : null}
+    </group>
+  );
+}
+
+// -------------------------------------------------------------------
+// Labels (main row only)
+// -------------------------------------------------------------------
+
+interface ProjectLabelsProps {
+  readonly project: Project;
+}
+
+function ProjectLabels({ project }: ProjectLabelsProps): React.ReactElement {
+  const indexLabel = `${project.index} / ${TOTAL_SLOTS}`;
+  const metaLabel = `${project.year} · ${project.stack}`;
+
+  return (
+    <>
+      <Text
+        font={MONO_FONT}
+        fontSize={INDEX_SIZE}
+        color={COLOR_FG_MUTED}
+        anchorX="left"
+        anchorY="bottom"
+        letterSpacing={0.12}
+        position={[-MAIN_HALF_W, INDEX_Y, 0]}
+      >
+        {indexLabel}
+      </Text>
+
+      <Text
+        font={MANROPE_FONT}
+        fontSize={NAME_SIZE}
+        color={COLOR_FG}
+        anchorX="left"
+        anchorY="bottom"
+        letterSpacing={-0.02}
+        position={[-MAIN_HALF_W, NAME_Y, 0]}
+        maxWidth={MAIN_PLANE_W * 1.1}
+      >
+        {project.name}
+      </Text>
+
+      <Text
+        font={MONO_FONT}
+        fontSize={META_SIZE}
+        color={COLOR_FG_SUBTLE}
+        anchorX="left"
+        anchorY="top"
+        letterSpacing={0.12}
+        position={[-MAIN_HALF_W, META_Y, 0]}
+      >
+        {metaLabel.toUpperCase()}
+      </Text>
+    </>
+  );
+}

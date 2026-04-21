@@ -1,0 +1,22 @@
+@use "styles/variables" as *;
+@use "styles/mixins" as *;
+
+.root {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  background-color: #050505;
+  overflow: hidden;
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+    cursor: grab;
+  }
+
+  canvas[data-dragging="true"] {
+    cursor: grabbing;
+  }
+}
