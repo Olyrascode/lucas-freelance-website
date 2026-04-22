@@ -5,17 +5,36 @@
   position: fixed;
   inset: 0;
   z-index: $z-overlay;
-  pointer-events: auto;
+  pointer-events: none;
   overflow: hidden;
+
+  // Exposed via JS: mirrors the focusProgress each frame so the backdrop
+  // can fade in/out in lockstep with the camera dolly.
+  --focus-progress: 0;
 }
 
+// Backdrop only covers the LEFT column — the right half stays transparent
+// so the 3D plane shows through. Opacity tracks the focus dolly.
 .backdrop {
   position: absolute;
-  inset: 0;
-  background-color: rgba(5, 5, 5, 0.45);
-  backdrop-filter: blur(18px) saturate(0.6);
-  -webkit-backdrop-filter: blur(18px) saturate(0.6);
-  opacity: 0;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 56%;
+  background: linear-gradient(
+    to right,
+    rgba(5, 5, 5, 0.88) 0%,
+    rgba(5, 5, 5, 0.78) 70%,
+    rgba(5, 5, 5, 0) 100%
+  );
+  backdrop-filter: blur(20px) saturate(0.7);
+  -webkit-backdrop-filter: blur(20px) saturate(0.7);
+  opacity: var(--focus-progress, 0);
+  pointer-events: auto;
+
+  @include reduced-motion {
+    opacity: 1;
+  }
 }
 
 .close {
@@ -23,6 +42,7 @@
   top: calc(#{$header-height-mobile} + #{$space-3});
   right: $gutter;
   z-index: 2;
+  pointer-events: auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -33,6 +53,7 @@
   background: transparent;
   color: $color-fg;
   cursor: pointer;
+  opacity: var(--focus-progress, 0);
   transition:
     background-color $motion-duration-fast $motion-ease-soft,
     color $motion-duration-fast $motion-ease-soft,
@@ -50,78 +71,29 @@
   }
 }
 
-.grid {
-  position: relative;
-  z-index: 1;
-  height: 100%;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: $space-4;
-  align-items: center;
-  padding: calc(#{$header-height-mobile} + #{$space-5}) $gutter $space-5;
-
-  @include tablet-up {
-    padding: calc(#{$header-height-desktop} + #{$space-6}) $gutter $space-6;
-  }
-
-  @include desktop-up {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    column-gap: $space-6;
-    padding: calc(#{$header-height-desktop} + #{$space-6}) $gutter $space-6;
-  }
-}
-
-// -------------------------------------------------------------------
-// Image column — full-bleed inside its cell, with grain overlay
-// -------------------------------------------------------------------
-
-.imageWrap {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  background-color: $color-bg-elev;
-
-  @include desktop-up {
-    grid-column: 2;
-    grid-row: 1;
-    aspect-ratio: 4 / 5;
-    max-height: 78vh;
-  }
-}
-
-.image {
-  object-fit: cover;
-  object-position: center;
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
-.grain {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.25;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  background-size: 200px 200px;
-}
-
-// -------------------------------------------------------------------
-// Content column
-// -------------------------------------------------------------------
-
+// Text column — left-aligned, constrained width, floats on top of backdrop.
+// Opacity 0 by default so the raw text can NEVER flash into view before
+// useGSAP has had a chance to split it into overflow-hidden masks. GSAP
+// bumps opacity to 1 as soon as the reveal stage fires.
 .content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 56%;
   display: flex;
   flex-direction: column;
   gap: $space-3;
-  max-width: 44rem;
-  position: relative;
-  z-index: 2;
+  justify-content: center;
+  padding: calc(#{$header-height-desktop} + #{$space-6}) $gutter $space-6
+    calc(#{$gutter} + #{$space-3});
+  pointer-events: auto;
+  z-index: 1;
+  opacity: 0;
 
   @include desktop-up {
-    grid-column: 1;
-    grid-row: 1;
+    padding-left: calc(#{$gutter} + #{$space-5});
+    padding-right: $space-5;
     gap: $space-4;
   }
 }
@@ -131,29 +103,17 @@
   color: $color-fg-muted;
   display: flex;
   gap: $space-3;
-
-  span:first-child {
-    color: $color-fg;
-  }
 }
 
-// Title — big Manrope display, overflows onto image column at desktop
 .title {
   font-family: $font-display;
-  font-size: clamp(2.75rem, 9vw, 9rem);
+  font-size: clamp(2.5rem, 7vw, 7rem);
   font-weight: 500;
   line-height: 0.92;
   letter-spacing: -0.04em;
   color: $color-fg;
   text-transform: uppercase;
   margin: 0;
-
-  @include desktop-up {
-    // Let the title push into the image column for the editorial overlap.
-    width: 135%;
-    max-width: none;
-    mix-blend-mode: difference;
-  }
 }
 
 .role {
@@ -165,7 +125,7 @@
 .description {
   @include font-body($font-body-m);
   color: $color-fg-secondary;
-  max-width: 34rem;
+  max-width: 32rem;
 }
 
 .specs {
@@ -175,6 +135,7 @@
   margin: 0;
   padding-top: $space-3;
   border-top: 1px solid $color-line;
+  max-width: 32rem;
 }
 
 .specRow {

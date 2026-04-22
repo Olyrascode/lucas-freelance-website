@@ -15,7 +15,10 @@ import {
 } from "three";
 import { projects, type Project } from "@/data/projects";
 import {
+  DOLLY_DISTANCE,
   getDragMoved,
+  getFocusPlaneKey,
+  getFocusProgress,
   getRotation,
   openProject,
 } from "@/components/projets/rotondeStore";
@@ -156,6 +159,14 @@ const SCALE_FRONT = 1;
 const SCALE_SIDE = 0.6;
 const SCALE_LERP = 0.12;
 
+// Cinematic focus dolly — plane uses ease-OUT so it leads the camera.
+const PLANE_END = 0.6;
+function planeEaseOut(focusProgress: number): number {
+  const t = Math.max(0, Math.min(1, focusProgress / PLANE_END));
+  return 1 - Math.pow(1 - t, 3);
+}
+
+
 // -------------------------------------------------------------------
 // Typography
 // -------------------------------------------------------------------
@@ -279,6 +290,21 @@ function getOrCreatePlaneMaterial(
 
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uSaturation = { value: 1 };
+    shader.uniforms.uFlatProgress = { value: 0 };
+
+    // Vertex: flatten the curved plane by scaling its z offset toward 0
+    // as uFlatProgress rises (0 = fully curved, 1 = perfectly flat).
+    shader.vertexShader =
+      "uniform float uFlatProgress;\n" +
+      shader.vertexShader.replace(
+        "#include <begin_vertex>",
+        `
+        #include <begin_vertex>
+        transformed.z *= 1.0 - uFlatProgress;
+        `,
+      );
+
+    // Fragment: desaturate based on uSaturation.
     shader.fragmentShader =
       "uniform float uSaturation;\n" +
       shader.fragmentShader.replace(
@@ -355,8 +381,6 @@ function Rows(): React.ReactElement {
             if (!project || !texture) return null;
 
             const angle = slotIdx * ANGLE_STEP + row.angleOffset;
-            const x = Math.sin(angle) * RADIUS;
-            const z = -Math.cos(angle) * RADIUS;
 
             const planeKey = `${rowIdx}-${slotIdx}`;
             return (
@@ -366,8 +390,7 @@ function Rows(): React.ReactElement {
                 project={project}
                 texture={texture}
                 slotAngle={angle}
-                position={[x, row.y, z]}
-                rotationY={-angle}
+                rowY={row.y}
                 planeW={row.w}
                 planeH={row.h}
                 showLabels={row.isMain}
@@ -452,8 +475,7 @@ interface ProjectPlaneProps {
   readonly project: Project;
   readonly texture: Texture;
   readonly slotAngle: number;
-  readonly position: [number, number, number];
-  readonly rotationY: number;
+  readonly rowY: number;
   readonly planeW: number;
   readonly planeH: number;
   readonly showLabels: boolean;
@@ -464,19 +486,15 @@ function ProjectPlane({
   project,
   texture,
   slotAngle,
-  position,
-  rotationY,
+  rowY,
   planeW,
   planeH,
   showLabels,
 }: ProjectPlaneProps): React.ReactElement {
   const meshRef = useRef<Mesh>(null);
+  const slotGroupRef = useRef<Group>(null);
   const [hovered, setHovered] = useState(false);
 
-  // Module-level material registry — each plane has its own
-  // MeshBasicMaterial with an injected `uSaturation` uniform set up via
-  // onBeforeCompile. This survives React 19 strict-mode remounts and has
-  // none of the reconciliation edge cases that <shaderMaterial> hits.
   const material = getOrCreatePlaneMaterial(planeKey, texture);
   const geometry = getCurvedPlaneGeometry(planeW, planeH, RADIUS);
 
@@ -492,19 +510,60 @@ function ProjectPlane({
       mesh.scale.set(next, next, next);
     }
 
-    // Look the material up fresh from the registry each frame so we
-    // don't capture a local variable that the immutability rule flags
-    // as "mutated after render". The shader is only attached after the
-    // first compilation — until then, uSaturation stays at its default 1.
+    // --- Slot transform, lerped toward the focus target when selected ---
+    const slotGroup = slotGroupRef.current;
+    if (slotGroup) {
+      const isFocused = getFocusPlaneKey() === planeKey;
+      const planeT = isFocused ? planeEaseOut(getFocusProgress()) : 0;
+
+      const baseX = Math.sin(slotAngle) * RADIUS;
+      const baseZ = -Math.cos(slotAngle) * RADIUS;
+      const baseY = rowY;
+      const baseRotY = -slotAngle;
+
+      if (planeT > 0) {
+        // Target = world (0, 0, -(R + DOLLY)) so the plane lands dead
+        // ahead of the camera regardless of its slot. Convert that back
+        // into group-local coords using the frozen group rotation θ.
+        const θ = getRotation();
+        const D = RADIUS + DOLLY_DISTANCE;
+        const targetX = Math.sin(θ) * D;
+        const targetY = 0;
+        const targetZ = -Math.cos(θ) * D;
+        const targetRotY = -θ;
+
+        slotGroup.position.x = baseX + (targetX - baseX) * planeT;
+        slotGroup.position.y = baseY + (targetY - baseY) * planeT;
+        slotGroup.position.z = baseZ + (targetZ - baseZ) * planeT;
+
+        // Shortest-arc lerp for rotation to avoid spinning past π.
+        let diff = targetRotY - baseRotY;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        slotGroup.rotation.y = baseRotY + diff * planeT;
+      } else {
+        slotGroup.position.set(baseX, baseY, baseZ);
+        slotGroup.rotation.y = baseRotY;
+      }
+    }
+
+    // --- Shader uniforms: saturation + flatten-during-focus -----------
     const m = planeMaterialRegistry.get(planeKey);
     const shader = m?.userData.shader;
-    if (shader?.uniforms?.uSaturation) {
-      shader.uniforms.uSaturation.value = frontness;
+    if (shader) {
+      if (shader.uniforms.uSaturation) {
+        shader.uniforms.uSaturation.value = frontness;
+      }
+      if (shader.uniforms.uFlatProgress) {
+        const flatT =
+          getFocusPlaneKey() === planeKey ? getFocusProgress() : 0;
+        shader.uniforms.uFlatProgress.value = flatT;
+      }
     }
   });
 
   return (
-    <group position={position} rotation={[0, rotationY, 0]}>
+    <group ref={slotGroupRef}>
       <mesh
         ref={meshRef}
         name={project.slug}
@@ -520,7 +579,7 @@ function ProjectPlane({
         onClick={(e) => {
           e.stopPropagation();
           if (getDragMoved() > 6) return;
-          openProject(project.slug);
+          openProject(project.slug, planeKey, slotAngle);
         }}
       >
         <primitive object={geometry} attach="geometry" />

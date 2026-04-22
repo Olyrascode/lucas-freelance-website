@@ -5,10 +5,14 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type { Group } from "three";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import {
+  clearFocus,
+  DOLLY_DISTANCE,
+  getFocusSlotAngle,
   getOpenSlug,
   markInteracted,
   resetRotondeStore,
   setDragMoved,
+  setFocusProgress,
   setRotation,
   SLOT_ANGLE,
 } from "@/components/projets/rotondeStore";
@@ -28,6 +32,16 @@ const FRICTION = 0.9; // per-frame damping at 60fps baseline
 const MOMENTUM_EPSILON = 0.0005; // stop inertia below this
 const SETTLE_EPSILON = 0.0005;
 
+const FOCUS_DURATION = 1.0; // seconds — linear progress duration (open or close)
+const FOCUS_EPSILON = 0.001;
+const CAMERA_DELAY = 0.3; // camera starts moving after 30% of focus progress
+const YAW_SHIFT = 0.18; // rad — pushes the plane to the right of center so the left column of the HTML overlay can hold the text
+
+function cameraEaseIn(focusProgress: number): number {
+  const t = Math.max(0, Math.min(1, (focusProgress - CAMERA_DELAY) / (1 - CAMERA_DELAY)));
+  return t * t;
+}
+
 // --- Hook ----------------------------------------------------------------
 
 export function useRotondeControls(
@@ -44,6 +58,7 @@ export function useRotondeControls(
   const dragLastY = useRef(0);
   const dragMovedPx = useRef(0);
   const pitch = useRef(0);
+  const focusProgress = useRef(0);
   const activePointerId = useRef<number | null>(null);
 
   useEffect(() => {
@@ -180,28 +195,16 @@ export function useRotondeControls(
     // hook return, so the immutability lint doesn't follow through.
     const cam = state.camera;
 
+    // --- Rotation / drag inertia ----------------------------------------
     if (reducedMotion) {
-      // Snap targets instantly, no inertia, no lerp.
       if (target.current !== null) {
         rotation.current = target.current;
         target.current = null;
       }
       momentum.current = 0;
-      group.rotation.y = rotation.current;
-      cam.rotation.x = pitch.current;
-      setRotation(rotation.current);
-      return;
-    }
-
-    if (isDragging.current) {
-      // rotation + pitch are being set directly by the drag handler
-      group.rotation.y = rotation.current;
-      cam.rotation.x = pitch.current;
-      setRotation(rotation.current);
-      return;
-    }
-
-    if (target.current !== null) {
+    } else if (isDragging.current) {
+      // rotation + pitch are set directly by the drag handler
+    } else if (target.current !== null) {
       const diff = target.current - rotation.current;
       if (Math.abs(diff) < SETTLE_EPSILON) {
         rotation.current = target.current;
@@ -213,12 +216,56 @@ export function useRotondeControls(
       rotation.current += momentum.current;
       momentum.current *= Math.pow(FRICTION, delta * 60);
     } else if (momentum.current !== 0) {
-      // Inertia has died down — stop cleanly without snapping anywhere.
       momentum.current = 0;
     }
 
     group.rotation.y = rotation.current;
-    cam.rotation.x = pitch.current;
     setRotation(rotation.current);
+
+    // --- Focus dolly (camera tracks the clicked plane) ------------------
+    // Linear progress over FOCUS_DURATION so the timing is predictable;
+    // plane and camera each derive their own curve from this master value.
+    const focusTarget = getOpenSlug() !== null ? 1 : 0;
+    if (reducedMotion) {
+      focusProgress.current = focusTarget;
+    } else {
+      const diff = focusTarget - focusProgress.current;
+      if (Math.abs(diff) > 0.0001) {
+        const step = (delta / FOCUS_DURATION) * Math.sign(diff);
+        focusProgress.current = Math.max(
+          0,
+          Math.min(1, focusProgress.current + step),
+        );
+      }
+    }
+    setFocusProgress(focusProgress.current);
+
+    const focusedSlotAngle = getFocusSlotAngle();
+    if (focusedSlotAngle !== null) {
+      // Camera T: delayed + ease-in. The plane is simultaneously animated
+      // in ProjectPlane (via the matching ProjectScene useFrame) so both
+      // end up sitting on the Z-axis at (0, 0, -(R + DOLLY_DISTANCE)).
+      // The camera only translates on -Z — it never rotates to face the
+      // plane, which avoids the "rotonde is spinning" perception.
+      const cameraT = cameraEaseIn(focusProgress.current);
+      cam.position.set(0, 0, -DOLLY_DISTANCE * cameraT);
+      // Small yaw shift at the end so the plane lands on the RIGHT half
+      // of the screen (HTML text column sits on the left half).
+      cam.rotation.y = YAW_SHIFT * cameraT;
+      cam.rotation.x = pitch.current * (1 - cameraT);
+
+      if (focusTarget === 0 && focusProgress.current < FOCUS_EPSILON) {
+        clearFocus();
+        focusProgress.current = 0;
+        setFocusProgress(0);
+        cam.position.set(0, 0, 0);
+        cam.rotation.y = 0;
+        cam.rotation.x = pitch.current;
+      }
+    } else {
+      cam.position.set(0, 0, 0);
+      cam.rotation.y = 0;
+      cam.rotation.x = pitch.current;
+    }
   });
 }

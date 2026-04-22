@@ -12,6 +12,12 @@ import { projects } from "@/data/projects";
 export const PROJECT_COUNT = projects.length;
 export const SLOT_ANGLE = (Math.PI * 2) / PROJECT_COUNT;
 
+// Cinematic focus dolly — how far the camera travels forward along -Z,
+// and equivalently how far past the camera's target the focused plane
+// lands (RADIUS + DOLLY_DISTANCE from origin). Pushed far enough that the
+// rest of the rotonde ends up behind the camera (out of view).
+export const DOLLY_DISTANCE = 15;
+
 type Listener = () => void;
 
 interface State {
@@ -19,6 +25,11 @@ interface State {
   dragMovedPx: number;
   hasInteracted: boolean;
   openSlug: string | null;
+  // Cinematic dolly: which specific plane is focused, its slot angle, and
+  // how far along the focus transition we are (0 = normal, 1 = fully focused).
+  focusPlaneKey: string | null;
+  focusSlotAngle: number | null;
+  focusProgress: number;
 }
 
 const state: State = {
@@ -26,6 +37,9 @@ const state: State = {
   dragMovedPx: 0,
   hasInteracted: false,
   openSlug: null,
+  focusPlaneKey: null,
+  focusSlotAngle: null,
+  focusProgress: 0,
 };
 
 const listeners = new Set<Listener>();
@@ -53,9 +67,24 @@ export function markInteracted(): void {
   }
 }
 
-export function openProject(slug: string): void {
-  if (state.openSlug !== slug) {
+export function openProject(
+  slug: string,
+  planeKey: string,
+  slotAngle: number,
+): void {
+  // Guard: refuse to open a different project while one is still focused
+  // or reversing. Avoids the camera jumping between targets mid-animation,
+  // which read as a "rotonde spin" for the user.
+  if (
+    state.focusPlaneKey !== null &&
+    state.focusPlaneKey !== planeKey
+  ) {
+    return;
+  }
+  if (state.openSlug !== slug || state.focusPlaneKey !== planeKey) {
     state.openSlug = slug;
+    state.focusPlaneKey = planeKey;
+    state.focusSlotAngle = slotAngle;
     emit();
   }
 }
@@ -63,8 +92,22 @@ export function openProject(slug: string): void {
 export function closeProject(): void {
   if (state.openSlug !== null) {
     state.openSlug = null;
+    // Keep focusPlaneKey / focusSlotAngle set so the reverse dolly plays
+    // back correctly — useRotondeControls clears them once progress ≈ 0.
     emit();
   }
+}
+
+export function clearFocus(): void {
+  if (state.focusPlaneKey !== null || state.focusSlotAngle !== null) {
+    state.focusPlaneKey = null;
+    state.focusSlotAngle = null;
+    // no emit — read on-demand via getters, not via React state.
+  }
+}
+
+export function setFocusProgress(p: number): void {
+  state.focusProgress = p;
 }
 
 export function resetRotondeStore(): void {
@@ -72,6 +115,9 @@ export function resetRotondeStore(): void {
   state.dragMovedPx = 0;
   state.hasInteracted = false;
   state.openSlug = null;
+  state.focusPlaneKey = null;
+  state.focusSlotAngle = null;
+  state.focusProgress = 0;
   emit();
 }
 
@@ -91,6 +137,18 @@ export function getHasInteracted(): boolean {
 
 export function getOpenSlug(): string | null {
   return state.openSlug;
+}
+
+export function getFocusPlaneKey(): string | null {
+  return state.focusPlaneKey;
+}
+
+export function getFocusSlotAngle(): number | null {
+  return state.focusSlotAngle;
+}
+
+export function getFocusProgress(): number {
+  return state.focusProgress;
 }
 
 export function subscribe(listener: Listener): () => void {
