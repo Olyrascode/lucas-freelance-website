@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, type CSSProperties } from "react";
 import { TransitionLink as Link } from "@/components/transitions/TransitionLink";
+import { useTransition } from "@/components/transitions/TransitionProvider";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "@/lib/gsap";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
@@ -112,6 +113,12 @@ export function Hero(): React.ReactElement {
   const rootRef = useRef<HTMLElement | null>(null);
   const portraitRef = useRef<HTMLDivElement | null>(null);
   const reducedMotion = usePrefersReducedMotion();
+  // Gate the intro timeline on the curtain being gone. When the user
+  // lands on the home page via a page transition, the Hero mounts while
+  // the curtain is still covering — without this, the staggered tile
+  // reveal + title char slide play under the curtain and the user sees
+  // them already settled by the time it lifts.
+  const { isReady } = useTransition();
 
   // Pre-compute the tile grid once — stable across renders so GSAP selectors
   // don't re-attach.
@@ -174,6 +181,12 @@ export function Hero(): React.ReactElement {
       }
       if (tileTargets.length > 0) {
         gsap.set(tileTargets, { opacity: 0, y: 18, scale: 0.88 });
+      }
+
+      // Curtain still up — keep the initial hidden state and hold off
+      // the timeline. The hook re-runs once isReady flips to true.
+      if (!isReady) {
+        return;
       }
 
       const tl = gsap.timeline({ defaults: { ease: "expo.out" } });
@@ -243,7 +256,7 @@ export function Hero(): React.ReactElement {
         tl.kill();
       };
     },
-    { scope: rootRef, dependencies: [reducedMotion] },
+    { scope: rootRef, dependencies: [reducedMotion, isReady] },
   );
 
   // Cursor-proximity lift — only tiles within a radius of the pointer rise

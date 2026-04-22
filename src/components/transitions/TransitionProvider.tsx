@@ -51,6 +51,10 @@ const LOADER_COUNT_MAX = 99;
 interface TransitionContextValue {
   readonly navigate: (href: string) => void;
   readonly isTransitioning: boolean;
+  // isReady is true only when no curtain is on screen — including the
+  // uncover exit phase. Components with entry animations gate on this so
+  // they don't play behind the curtain and look finished once it lifts.
+  readonly isReady: boolean;
 }
 
 const TransitionContext = createContext<TransitionContextValue | null>(null);
@@ -75,6 +79,10 @@ export function TransitionProvider({
   const reducedMotion = useReducedMotion();
 
   const [isTransitioning, setIsTransitioning] = useState(false);
+  // Starts true so the initial page load (no curtain) can animate normally.
+  // navigate() flips to false; AnimatePresence's onExitComplete flips back
+  // to true once the uncover exit has actually finished.
+  const [isReady, setIsReady] = useState(true);
   const pendingHrefRef = useRef<string | null>(null);
   const isPopStateRef = useRef(false);
   const numberRef = useRef<HTMLSpanElement | null>(null);
@@ -106,6 +114,7 @@ export function TransitionProvider({
 
       pendingHrefRef.current = href;
       setIsTransitioning(true);
+      setIsReady(false);
     },
     [isTransitioning, pathname, reducedMotion, resetScrollAndRefresh, router],
   );
@@ -134,6 +143,7 @@ export function TransitionProvider({
       isPopStateRef.current = true;
       pendingHrefRef.current = null;
       setIsTransitioning(false);
+      setIsReady(true);
     };
     window.addEventListener("popstate", onPopState);
     return () => {
@@ -206,12 +216,18 @@ export function TransitionProvider({
   const ctxValue: TransitionContextValue = {
     navigate,
     isTransitioning,
+    isReady,
   };
 
   return (
     <TransitionContext.Provider value={ctxValue}>
       {children}
-      <AnimatePresence mode="wait">
+      <AnimatePresence
+        mode="wait"
+        onExitComplete={() => {
+          setIsReady(true);
+        }}
+      >
         {isTransitioning ? (
           <motion.div
             key="page-transition-overlay"

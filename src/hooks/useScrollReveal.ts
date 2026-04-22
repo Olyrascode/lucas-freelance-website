@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
 import { motionDuration, motionEase, motionStagger } from "@/lib/motion";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { useTransition } from "@/components/transitions/TransitionProvider";
 
 export interface ScrollRevealOptions {
   readonly selector?: string;
@@ -113,6 +114,13 @@ export function useScrollReveal<T extends HTMLElement = HTMLElement>(
   // user navigates to a new route, instead of staying frozen in the
   // "already animated" state from the previous page.
   const pathname = usePathname();
+  // When we arrive on a new route via the transition curtain, the page's
+  // React tree mounts while the curtain is still on screen. Without this
+  // gate, ScrollTriggers above the fold fire onEnter and play behind the
+  // curtain — the user sees static, already-revealed content by the time
+  // the curtain lifts. We hide the elements (gsap.set) on the first run
+  // and only wire the ScrollTrigger once isReady flips back to true.
+  const { isReady } = useTransition();
 
   useGSAP(
     () => {
@@ -147,6 +155,14 @@ export function useScrollReveal<T extends HTMLElement = HTMLElement>(
       }
       if (allLineInners.length > 0) {
         gsap.set(allLineInners, { yPercent: 110 });
+      }
+
+      // Curtain still up → keep the elements hidden but skip creating the
+      // timeline + ScrollTrigger. The next re-run (triggered by isReady
+      // flipping to true) will re-set the hidden state and wire the
+      // trigger cleanly.
+      if (!isReady) {
+        return;
       }
 
       const tl = gsap.timeline({
@@ -207,6 +223,7 @@ export function useScrollReveal<T extends HTMLElement = HTMLElement>(
       revertOnUpdate: true,
       dependencies: [
         pathname,
+        isReady,
         reducedMotion,
         selector,
         linesSelector,
