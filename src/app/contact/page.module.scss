@@ -1,0 +1,300 @@
+@use "styles/variables" as *;
+@use "styles/mixins" as *;
+
+.root {
+  padding-top: calc(#{$header-height-mobile} + #{$space-6});
+  padding-bottom: $section-spacing;
+
+  @include tablet-up {
+    padding-top: calc(#{$header-height-desktop} + #{$space-7});
+  }
+}
+
+.inner {
+  @include container;
+}
+
+// --- Hero block ----------------------------------------------------------
+
+.hero {
+  padding-bottom: $section-spacing;
+}
+
+.hero .inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-3;
+
+  @include desktop-up {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+    grid-template-rows: auto auto;
+    column-gap: $space-5;
+    row-gap: $space-3;
+    align-items: start;
+  }
+}
+
+.heroEyebrow {
+  @include font-label;
+  color: $color-fg-muted;
+
+  @include desktop-up {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+.heroTitle {
+  font-family: $font-display;
+  font-size: clamp(3.5rem, 12vw, 14rem);
+  font-weight: 500;
+  line-height: 0.9;
+  letter-spacing: -0.015em;
+  color: $color-fg;
+  text-transform: uppercase;
+  padding-right: 0.08em;
+
+  @include desktop-up {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+
+.heroLead {
+  @include font-body($font-body-l);
+  color: $color-fg-secondary;
+  max-width: 36rem;
+
+  @include desktop-up {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    padding-top: 8px;
+  }
+}
+
+// --- Body grid (info + form side by side on desktop) --------------------
+
+.body {
+  border-top: 1px solid $color-line;
+  padding-block: $space-6;
+
+  @include desktop-up {
+    padding-block: $space-7;
+  }
+}
+
+.bodyGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-6;
+
+  @include desktop-up {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
+    column-gap: $space-5;
+    align-items: start;
+  }
+}
+
+.sectionIndex {
+  @include font-label;
+  color: $color-fg-muted;
+  margin-bottom: $space-3;
+}
+
+.sectionTitle {
+  @include font-display($font-display-m);
+  color: $color-fg;
+  margin-bottom: $space-4;
+}
+
+// --- Info block ----------------------------------------------------------
+
+.info {
+  display: flex;
+  flex-direction: column;
+}
+
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  border-top: 1px solid $color-line-subtle;
+  padding-top: $space-3;
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.infoLabel {
+  @include font-label($font-label-sm);
+  color: $color-fg-muted;
+}
+
+.infoValue {
+  @include font-body($font-body-m);
+  color: $color-fg;
+
+  &[href] {
+    transition: color $motion-duration-fast $motion-ease-soft;
+
+    &:hover {
+      color: $color-fg-secondary;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+  }
+}
+
+// --- Form ----------------------------------------------------------------
+
+.formSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+  border-top: 1px solid $color-line-subtle;
+  padding-top: $space-4;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-3;
+
+  @include tablet-up {
+    grid-template-columns: 1fr 1fr;
+    gap: $space-4;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+}
+
+.label {
+  @include font-label($font-label-sm);
+  color: $color-fg-muted;
+}
+
+.optional {
+  color: $color-fg-subtle;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.input,
+.textarea {
+  @include font-body($font-body-m);
+  width: 100%;
+  background-color: transparent;
+  color: $color-fg;
+  border: none;
+  border-bottom: 1px solid $color-line;
+  padding: $space-2 0;
+  border-radius: 0;
+  font-family: inherit;
+  transition: border-color $motion-duration-fast $motion-ease-soft;
+
+  &::placeholder {
+    color: $color-fg-subtle;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $color-fg;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 8rem;
+  line-height: 1.5;
+}
+
+.formFooter {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  align-items: flex-start;
+  margin-top: $space-2;
+
+  @include tablet-up {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-4;
+  }
+}
+
+.submit {
+  @include font-body($font-body-m);
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-2 $space-3;
+  color: $color-fg;
+  background-color: transparent;
+  border: 1px solid $color-line;
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background-color $motion-duration-fast $motion-ease-soft,
+    color $motion-duration-fast $motion-ease-soft,
+    border-color $motion-duration-fast $motion-ease-soft;
+
+  svg {
+    transition: transform $motion-duration-fast $motion-ease-soft;
+  }
+
+  &:hover:not(:disabled) {
+    background-color: $color-fg;
+    color: $color-bg;
+    border-color: $color-fg;
+
+    svg {
+      transform: translateX(3px);
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.legal {
+  @include font-body($font-body-s);
+  color: $color-fg-muted;
+  max-width: 26rem;
+}
+
+.feedbackSuccess {
+  @include font-body($font-body-s);
+  color: $color-fg;
+  padding: $space-3;
+  border: 1px solid $color-line;
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.feedbackError {
+  @include font-body($font-body-s);
+  color: $color-fg;
+  padding: $space-3;
+  border: 1px solid rgba(255, 95, 95, 0.4);
+  background-color: rgba(255, 95, 95, 0.06);
+}

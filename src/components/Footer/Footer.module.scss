@@ -7,6 +7,18 @@
   overflow: hidden;
 }
 
+// Compact variant — used on routes that already have their own contact
+// entry point (e.g. /contact). Drops the editorial intro padding so the
+// utility band sits tight against the page content above.
+.rootCompact {
+  padding-block: $space-5 $space-5;
+
+  .utility {
+    border-top: 1px solid $color-line;
+    padding-top: $space-5;
+  }
+}
+
 .inner {
   @include container;
   display: flex;

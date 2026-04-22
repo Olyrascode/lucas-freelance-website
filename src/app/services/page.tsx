@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { PagePlaceholder } from "@/components/PagePlaceholder/PagePlaceholder";
 import { buildPageMetadata } from "@/lib/metadata";
+import { ServicesContent } from "./ServicesContent";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Services",
@@ -10,11 +10,5 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default function ServicesPage(): React.ReactElement {
-  return (
-    <PagePlaceholder
-      index="02 / SERVICES"
-      title="Services"
-      description="Sites sur-mesure, animations, white-label, SEO technique — quatre prestations avec tarifs de départ clairs."
-    />
-  );
+  return <ServicesContent />;
 }

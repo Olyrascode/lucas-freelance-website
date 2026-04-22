@@ -10,7 +10,12 @@ import {
   type ReactNode,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import {
+  AnimatePresence,
+  animate,
+  motion,
+  useReducedMotion,
+} from "motion/react";
 import { ScrollTrigger } from "@/lib/gsap";
 import { getLenisSnapshot } from "@/lib/lenis";
 import styles from "./TransitionProvider.module.scss";
@@ -31,8 +36,17 @@ import styles from "./TransitionProvider.module.scss";
 // AnimatePresence skip avoids fighting the browser's own scroll restoration.
 
 const COVER_HOLD_AFTER_PUSH_MS = 400;
-const EASE_EXPO_IN_OUT = [0.19, 1, 0.22, 1] as const;
+// Slow start → fast end curve: the first ~20% barely moves, then the
+// curtain accelerates toward its landing. Same curve drives cover and
+// uncover, so both feel like they build momentum as they sweep across
+// the viewport.
+const EASE_SLOW_TO_FAST = [0.988, 0.369, 0.188, 0.997] as const;
 const ANIMATION_DURATION = 0.8;
+// Counter goes from 1 → 99 over the visible curtain time (cover + hold +
+// most of the uncover). Tuned so it lands near the end of the sequence.
+const LOADER_COUNT_DURATION = 1.6;
+const LOADER_COUNT_MIN = 1;
+const LOADER_COUNT_MAX = 99;
 
 interface TransitionContextValue {
   readonly navigate: (href: string) => void;
@@ -63,6 +77,8 @@ export function TransitionProvider({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const pendingHrefRef = useRef<string | null>(null);
   const isPopStateRef = useRef(false);
+  const numberRef = useRef<HTMLSpanElement | null>(null);
+  const progressFillRef = useRef<HTMLDivElement | null>(null);
 
   const resetScrollAndRefresh = useCallback((): void => {
     const lenis = getLenisSnapshot();
@@ -134,6 +150,39 @@ export function TransitionProvider({
     }
   }, [pathname]);
 
+  // Imperative loader: when the curtain becomes active we drive the
+  // counter (1 → 99) and the progress bar (scaleX 0 → 1) with Motion's
+  // `animate` driver and write straight to the DOM. Skipping React state
+  // here keeps the per-frame updates cheap and avoids re-rendering the
+  // whole provider tree 60 times during a transition.
+  useEffect(() => {
+    if (!isTransitioning) return;
+    if (reducedMotion) return;
+    if (numberRef.current) {
+      numberRef.current.textContent = String(LOADER_COUNT_MIN);
+    }
+    if (progressFillRef.current) {
+      progressFillRef.current.style.transform = "scaleX(0)";
+    }
+    const controls = animate(LOADER_COUNT_MIN, LOADER_COUNT_MAX, {
+      duration: LOADER_COUNT_DURATION,
+      ease: [0.65, 0, 0.35, 1],
+      onUpdate: (value) => {
+        if (numberRef.current) {
+          numberRef.current.textContent = String(Math.round(value));
+        }
+        if (progressFillRef.current) {
+          const t =
+            (value - LOADER_COUNT_MIN) / (LOADER_COUNT_MAX - LOADER_COUNT_MIN);
+          progressFillRef.current.style.transform = `scaleX(${t.toFixed(4)})`;
+        }
+      },
+    });
+    return () => {
+      controls.stop();
+    };
+  }, [isTransitioning, reducedMotion]);
+
   // After every committed pathname change, refresh ScrollTrigger so the
   // new page's freshly-mounted triggers (created by useScrollReveal in
   // child components) re-evaluate their start/end positions against the
@@ -172,7 +221,7 @@ export function TransitionProvider({
             exit={{ y: "-100%" }}
             transition={{
               duration: ANIMATION_DURATION,
-              ease: EASE_EXPO_IN_OUT,
+              ease: EASE_SLOW_TO_FAST,
             }}
             onAnimationComplete={(definition) => {
               // Motion fires onAnimationComplete for both `animate` and
@@ -187,7 +236,16 @@ export function TransitionProvider({
                 handleCoverComplete();
               }
             }}
-          />
+          >
+            <div className={styles.loader} aria-hidden="true">
+              <span ref={numberRef} className={styles.number}>
+                {LOADER_COUNT_MIN}
+              </span>
+              <div className={styles.progressTrack}>
+                <div ref={progressFillRef} className={styles.progressFill} />
+              </div>
+            </div>
+          </motion.div>
         ) : null}
       </AnimatePresence>
     </TransitionContext.Provider>

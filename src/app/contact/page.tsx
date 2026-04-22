@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { PagePlaceholder } from "@/components/PagePlaceholder/PagePlaceholder";
 import { buildPageMetadata } from "@/lib/metadata";
+import { ContactContent } from "./ContactContent";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Contact",
@@ -10,11 +10,5 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default function ContactPage(): React.ReactElement {
-  return (
-    <PagePlaceholder
-      index="04 / CONTACT"
-      title="Contact"
-      description="Formulaire de prise de contact — RDV découverte, réponse sous 48h ouvrées."
-    />
-  );
+  return <ContactContent />;
 }

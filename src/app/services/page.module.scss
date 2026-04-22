@@ -1,0 +1,189 @@
+@use "styles/variables" as *;
+@use "styles/mixins" as *;
+
+.root {
+  padding-top: calc(#{$header-height-mobile} + #{$space-6});
+  padding-bottom: $section-spacing;
+
+  @include tablet-up {
+    padding-top: calc(#{$header-height-desktop} + #{$space-7});
+  }
+}
+
+.inner {
+  @include container;
+}
+
+// --- Hero block ----------------------------------------------------------
+
+.hero {
+  padding-bottom: $section-spacing;
+}
+
+.hero .inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-3;
+
+  @include desktop-up {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+    grid-template-rows: auto auto;
+    column-gap: $space-5;
+    row-gap: $space-3;
+    align-items: start;
+  }
+}
+
+.heroEyebrow {
+  @include font-label;
+  color: $color-fg-muted;
+
+  @include desktop-up {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+.heroTitle {
+  font-family: $font-display;
+  font-size: clamp(3.5rem, 12vw, 14rem);
+  font-weight: 500;
+  line-height: 0.9;
+  // Slight negative tracking for the editorial feel, but generous enough
+  // that the right-most glyph (S in PRESTATIONS) doesn't get shaved by
+  // the container edge.
+  letter-spacing: -0.015em;
+  color: $color-fg;
+  text-transform: uppercase;
+  // Defensive padding so the rightmost glyph's ink overhang stays inside
+  // the visible area at any viewport width.
+  padding-right: 0.08em;
+
+  @include desktop-up {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+
+.heroLead {
+  @include font-body($font-body-l);
+  color: $color-fg-secondary;
+  max-width: 36rem;
+
+  @include desktop-up {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    padding-top: 8px;
+  }
+}
+
+// --- Service section -----------------------------------------------------
+
+.section {
+  padding-block: $space-6;
+  border-top: 1px solid $color-line;
+
+  @include desktop-up {
+    padding-block: $space-7;
+  }
+}
+
+.serviceGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-3;
+
+  @include desktop-up {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+    grid-template-rows: auto auto;
+    column-gap: $space-5;
+    row-gap: $space-3;
+    align-items: start;
+  }
+}
+
+.sectionIndex {
+  @include font-label;
+  color: $color-fg-muted;
+
+  @include desktop-up {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+.sectionTitle {
+  @include font-display($font-display-l);
+  color: $color-fg;
+
+  @include desktop-up {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+
+.serviceBody {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+  max-width: 40rem;
+
+  @include desktop-up {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    padding-top: 8px;
+  }
+}
+
+.serviceDesc {
+  @include font-body($font-body-l);
+  color: $color-fg-secondary;
+}
+
+.lists {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+
+  @include tablet-up {
+    flex-direction: row;
+    gap: $space-4;
+  }
+}
+
+.listBlock {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.listLabel {
+  @include font-label($font-label-sm);
+  color: $color-fg-muted;
+  padding-bottom: $space-2;
+  border-bottom: 1px solid $color-line-subtle;
+}
+
+.bullets {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+
+  li {
+    @include font-body($font-body-s);
+    color: $color-fg-secondary;
+    display: flex;
+    gap: $space-2;
+    align-items: baseline;
+
+    &::before {
+      content: "—";
+      color: $color-fg-subtle;
+      flex: 0 0 auto;
+    }
+  }
+}
+
