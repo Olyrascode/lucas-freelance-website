@@ -24,7 +24,6 @@
     bottom: calc(#{$gutter} + 42px);
     width: calc(40vw - #{$gutter});
     z-index: 0;
-    pointer-events: none;
   }
 
   @include desktop-up {
@@ -43,12 +42,35 @@
       rgba(10, 10, 10, 0.9) 100%
     );
     pointer-events: none;
+    z-index: 2;
   }
 }
 
-.portraitImg {
-  object-fit: cover;
-  object-position: center;
+// Grid of tiles that together reconstruct the portrait. Each tile shows a
+// slice of the same background image via a scaled-up background-size plus
+// a matching background-position. GSAP staggers them in at mount; CSS
+// handles the hover lift with a per-tile transition-delay.
+.tiles {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--tile-cols), 1fr);
+  grid-template-rows: repeat(var(--tile-rows), 1fr);
+  z-index: 1;
+  perspective: 800px;
+}
+
+.tile {
+  position: relative;
+  display: block;
+  background-image: url("/lucas-hero_comp.webp");
+  background-size: calc(var(--tile-cols) * 100%) calc(var(--tile-rows) * 100%);
+  background-position:
+    calc(var(--col) / (var(--tile-cols) - 1) * 100%)
+    calc(var(--row) / (var(--tile-rows) - 1) * 100%);
+  background-repeat: no-repeat;
+  will-change: transform, opacity;
+  transform-style: preserve-3d;
 }
 
 .inner {
@@ -58,6 +80,11 @@
   min-height: calc(100dvh - #{$header-height-mobile} - #{$space-4} - $gutter);
   display: grid;
   grid-template-rows: 1fr auto auto auto;
+  // .inner sits above the portrait (z-index 1 vs 0). Without this, its full
+  // bounding box — even the visually-empty left half — intercepts hover
+  // events that should reach the tile grid. We opt interactive children
+  // back in with pointer-events: auto below.
+  pointer-events: none;
 
   @include tablet-up {
     min-height: calc(
@@ -76,6 +103,9 @@
   gap: $space-3;
   max-width: 34rem;
   padding-top: $space-6;
+  // re-enable hit testing on the right-side text column so CTAs + links
+  // work despite .inner being pointer-events: none.
+  pointer-events: auto;
 
   @include desktop-up {
     gap: $space-4;
@@ -157,6 +187,8 @@
   margin-top: $space-5;
   margin-left: 0.45em;
   margin-bottom: -0.5em;
+  // Decorative only — let hovers fall through to the portrait underneath.
+  pointer-events: none;
 }
 
 .title {
@@ -165,7 +197,7 @@
   font-size: clamp(3rem, 14vw, 17rem);
   font-weight: 500;
   line-height: 0.9;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.01em;
   color: $color-fg;
   display: flex;
   flex-wrap: nowrap;
@@ -176,6 +208,14 @@
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
   margin-top: $space-2;
+  // The title spans the full width and visually overlaps the portrait's
+  // lower edge. Without pointer-events: none here (and on its spans), the
+  // title's box intercepts hover events meant for the tile grid.
+  pointer-events: none;
+}
+
+.title * {
+  pointer-events: none;
 }
 
 .titleWord {
@@ -189,6 +229,7 @@
   height: 42px;
   width: 100%;
   margin-top: $space-4;
+  pointer-events: none;
   background: linear-gradient(
     90deg,
     #4a9eb0 0%,
