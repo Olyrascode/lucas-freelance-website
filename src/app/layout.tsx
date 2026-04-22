@@ -5,6 +5,7 @@ import { Header } from "@/components/Header/Header";
 import { FooterGate } from "@/components/Footer/FooterGate";
 import { SkipLink } from "@/components/SkipLink/SkipLink";
 import { SmoothScrollProvider } from "@/components/SmoothScrollProvider/SmoothScrollProvider";
+import { TransitionProvider } from "@/components/transitions/TransitionProvider";
 import {
   defaultDescription,
   defaultTitle,
@@ -81,9 +82,11 @@ export default function RootLayout({
       <body className={bodyClass}>
         <SkipLink />
         <SmoothScrollProvider>
-          <Header />
-          <main id="main">{children}</main>
-          <FooterGate />
+          <TransitionProvider>
+            <Header />
+            <main id="main">{children}</main>
+            <FooterGate />
+          </TransitionProvider>
         </SmoothScrollProvider>
         <Analytics />
         <script

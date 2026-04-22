@@ -2,6 +2,7 @@
 
 import { useRef, type RefObject } from "react";
 import { useGSAP } from "@gsap/react";
+import { usePathname } from "next/navigation";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
 import { motionDuration, motionEase, motionStagger } from "@/lib/motion";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
@@ -18,15 +19,16 @@ export interface ScrollRevealOptions {
   readonly delay?: number;
 }
 
-const LINE_SPLIT_MARKER = "__lineSplit";
-
-interface MarkableHTMLElement extends HTMLElement {
-  [LINE_SPLIT_MARKER]?: boolean;
-}
+// Cache split-line inners per element so a re-run (revertOnUpdate / route
+// change) finds the existing spans instead of trying to re-split — DOM
+// mutations from the first run are not undone by gsap.context().revert(),
+// so a marker-only approach would return [] on subsequent runs and the
+// animation would have nothing to drive.
+const splitCache = new WeakMap<HTMLElement, HTMLElement[]>();
 
 function splitTextIntoLines(el: HTMLElement): HTMLElement[] {
-  const markable = el as MarkableHTMLElement;
-  if (markable[LINE_SPLIT_MARKER]) return [];
+  const cached = splitCache.get(el);
+  if (cached) return cached;
 
   const original = el.textContent ?? "";
   if (!original.trim()) return [];
@@ -72,7 +74,6 @@ function splitTextIntoLines(el: HTMLElement): HTMLElement[] {
     const wrap = document.createElement("span");
     wrap.style.display = "block";
     wrap.style.overflow = "hidden";
-    // Guard against descender clipping during the reveal.
     wrap.style.paddingBottom = "0.08em";
     wrap.style.marginBottom = "-0.08em";
 
@@ -86,7 +87,7 @@ function splitTextIntoLines(el: HTMLElement): HTMLElement[] {
     inners.push(inner);
   }
 
-  markable[LINE_SPLIT_MARKER] = true;
+  splitCache.set(el, inners);
   return inners;
 }
 
@@ -107,6 +108,11 @@ export function useScrollReveal<T extends HTMLElement = HTMLElement>(
 
   const containerRef = useRef<T | null>(null);
   const reducedMotion = usePrefersReducedMotion();
+  // pathname dep + revertOnUpdate ensures persistent components (e.g. the
+  // Footer mounted in the root layout) replay their reveal each time the
+  // user navigates to a new route, instead of staying frozen in the
+  // "already animated" state from the previous page.
+  const pathname = usePathname();
 
   useGSAP(
     () => {
@@ -133,6 +139,9 @@ export function useScrollReveal<T extends HTMLElement = HTMLElement>(
         allLineInners.push(...inners);
       }
 
+      // Force initial state explicitly — revertOnUpdate clears prior
+      // GSAP styles between runs, so we restate the hidden values here
+      // rather than relying on a residual gsap.from()-style assumption.
       if (fadeTargets.length > 0) {
         gsap.set(fadeTargets, { opacity: 0, y });
       }
@@ -176,14 +185,28 @@ export function useScrollReveal<T extends HTMLElement = HTMLElement>(
         );
       }
 
+      // After the timeline + ScrollTrigger are wired, give the new layout
+      // a tick to settle then refresh — covers the case where this hook
+      // mounts under a curtain (page transition) and the scroll position
+      // / element box has just been reset.
+      const refreshTimeout = window.setTimeout(() => {
+        ScrollTrigger.refresh();
+      }, 100);
+
       return () => {
+        window.clearTimeout(refreshTimeout);
         tl.scrollTrigger?.kill();
         tl.kill();
       };
     },
     {
       scope: containerRef as RefObject<HTMLElement>,
+      // pathname triggers a re-run for persistent components on route
+      // change. revertOnUpdate clears prior styles so the gsap.set above
+      // restores the hidden state cleanly before we replay.
+      revertOnUpdate: true,
       dependencies: [
+        pathname,
         reducedMotion,
         selector,
         linesSelector,

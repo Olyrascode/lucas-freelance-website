@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { TransitionLink as Link } from "@/components/transitions/TransitionLink";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import styles from "./Services.module.scss";
 

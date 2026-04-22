@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { TransitionLink as Link } from "@/components/transitions/TransitionLink";
 import { contactLinks, footerNav } from "@/lib/nav";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import styles from "./Footer.module.scss";

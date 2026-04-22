@@ -1,0 +1,47 @@
+@use "styles/variables" as *;
+
+// Full-viewport curtain that covers the page during SPA navigation. Sits
+// above every other element so content swaps stay hidden until the new
+// route is ready.
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: $color-bg;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform;
+
+  // Soft shadows extending above + below the curtain so its leading edge
+  // (cover phase) and trailing edge (uncover phase) have a visible depth
+  // cue against the page they're sliding over.
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 80px;
+    pointer-events: none;
+  }
+
+  &::before {
+    top: -80px;
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.5),
+      rgba(0, 0, 0, 0)
+    );
+  }
+
+  &::after {
+    bottom: -80px;
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.5),
+      rgba(0, 0, 0, 0)
+    );
+  }
+}
