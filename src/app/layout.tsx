@@ -91,6 +91,11 @@ export const metadata: Metadata = {
   },
   robots: { index: true, follow: true },
   alternates: { canonical: "/" },
+  // Google Search Console property verification — emits
+  // <meta name="google-site-verification" content="..." /> in <head>.
+  verification: {
+    google: "lZwxZ4dR1RkU9O-ll--IIhRoR6PSzzISGqINIlfznWs",
+  },
 };
 
 export default function RootLayout({
