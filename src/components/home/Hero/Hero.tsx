@@ -447,24 +447,35 @@ export function Hero(): React.ReactElement {
           unchanged because .titleEyebrow and .title still target the
           original positions.
         */}
+        {/*
+          HTML reads "Lucas Aufrère, développeur front-end créatif freelance"
+          (name first for branding, normal case, accent preserved). The
+          wordmark is rendered visually in uppercase via CSS
+          text-transform on .title — browsers map "è" → "È" under
+          uppercase, so the visual shows LUCAS AUFRÈRE with the grave
+          accent intact.
+
+          DOM order is name → separator → eyebrow, but .titleEyebrow
+          (grid-row: 2) and .title (grid-row: 3) still place themselves
+          visually as before: eyebrow above, wordmark below. The comma
+          separator is visually hidden but present in textContent so
+          crawlers and screen readers get the full sentence.
+        */}
         <h1 id="hero-title" className={styles.heading}>
-          <span className={styles.titleEyebrow} data-lines>
-            Développeur front-end créatif freelance
-          </span>
-          {/* Explicit whitespace text nodes so textContent reads
-              "…freelance LUCAS AUFRERE" with real spaces for crawlers —
-              CSS gap on .title is visual only and doesn't show up in
-              textContent. Whitespace-only nodes are discarded for
-              grid/flex layout so the visual is unchanged. */}
-          {" "}
           <span className={styles.title}>
             <span className={styles.titleWord} data-chars>
-              LUCAS
+              Lucas
             </span>
             {" "}
             <span className={styles.titleWord} data-chars>
-              AUFRERE
+              Aufrère
             </span>
+          </span>
+          <span className={styles.titleSeparator} aria-hidden="true">
+            ,{" "}
+          </span>
+          <span className={styles.titleEyebrow} data-lines>
+            développeur front-end créatif freelance
           </span>
         </h1>
 

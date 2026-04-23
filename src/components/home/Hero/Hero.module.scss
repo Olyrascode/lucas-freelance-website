@@ -232,6 +232,14 @@
   white-space: nowrap;
 }
 
+// Comma punctuation between the wordmark and the eyebrow — present in
+// the H1 textContent for grammatically correct reading, removed from the
+// visual flow (eyebrow and wordmark sit in their own grid rows, so the
+// comma would end up as an orphan grid item otherwise).
+.titleSeparator {
+  @include visually-hidden;
+}
+
 .divider {
   grid-row: 4;
   height: 42px;
