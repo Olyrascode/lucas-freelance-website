@@ -21,6 +21,9 @@
 .label {
   @include font-display($font-display-l);
   color: $color-fg;
+  // User-agent h2 margin would nudge grid alignment; reset since the grid
+  // gap handles spacing for us.
+  margin: 0;
 }
 
 .body {

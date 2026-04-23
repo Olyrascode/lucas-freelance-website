@@ -13,9 +13,9 @@ export function Philosophy(): React.ReactElement {
       aria-labelledby="philosophy-title"
     >
       <div className={styles.inner}>
-        <p className={styles.label} data-lines id="philosophy-title">
+        <h2 className={styles.label} data-lines id="philosophy-title">
           Philosophie
-        </p>
+        </h2>
         <p className={styles.body} data-lines>
           Je crois que la retenue est le signe d&apos;un site bien pensé.
           Moins d&apos;effets, plus d&apos;intention : chaque ligne de code

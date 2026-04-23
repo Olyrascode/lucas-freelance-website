@@ -49,9 +49,9 @@ export function Footer({ compact = false }: FooterProps): React.ReactElement {
                 <p className={styles.mailLabel}>Écrire directement</p>
                 <a
                   className={styles.mailLink}
-                  href="mailto:contact@lucas-aufrere.com"
+                  href="mailto:lucas@fyconic.fr"
                 >
-                  contact@lucas-aufrere.com
+                  lucas@fyconic.fr
                 </a>
               </div>
               <div className={styles.ctas}>

@@ -14,7 +14,7 @@ export const footerNav: readonly NavItem[] = [
 ] as const;
 
 export const contactLinks: readonly NavItem[] = [
-  { label: "contact@lucas-aufrere.com", href: "mailto:contact@lucas-aufrere.com" },
+  { label: "lucas@fyconic.fr", href: "mailto:lucas@fyconic.fr" },
   { label: "LinkedIn", href: "https://www.linkedin.com/in/lucas-aufrere/" },
   { label: "GitHub", href: "https://github.com/lucas-aufrere" },
 ] as const;

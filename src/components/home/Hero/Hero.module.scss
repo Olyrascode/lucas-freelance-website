@@ -177,6 +177,14 @@
   max-width: 34rem;
 }
 
+// The <h1> wraps both the eyebrow and the wordmark for semantics, but we
+// don't want it to introduce a box into the layout — display: contents
+// lets its children (the eyebrow span and the title span) stay as direct
+// grid items of .inner, preserving the original two-row placement.
+.heading {
+  display: contents;
+}
+
 .titleEyebrow {
   grid-row: 2;
   justify-self: start;

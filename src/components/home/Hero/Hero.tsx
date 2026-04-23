@@ -439,16 +439,32 @@ export function Hero(): React.ReactElement {
           </p>
         </div>
 
-        <p className={styles.titleEyebrow} data-lines>
-          Développeur front-end créatif freelance
-        </p>
-
-        <h1 id="hero-title" className={styles.title}>
-          <span className={styles.titleWord} data-chars>
-            LUCAS
+        {/*
+          Both the "Développeur front-end créatif freelance" eyebrow and
+          the LUCAS AUFRERE wordmark live inside a single <h1> for
+          semantics. display:contents on the heading keeps the two lines
+          as separate grid items (row 2 + row 3) — the styling is
+          unchanged because .titleEyebrow and .title still target the
+          original positions.
+        */}
+        <h1 id="hero-title" className={styles.heading}>
+          <span className={styles.titleEyebrow} data-lines>
+            Développeur front-end créatif freelance
           </span>
-          <span className={styles.titleWord} data-chars>
-            AUFRERE
+          {/* Explicit whitespace text nodes so textContent reads
+              "…freelance LUCAS AUFRERE" with real spaces for crawlers —
+              CSS gap on .title is visual only and doesn't show up in
+              textContent. Whitespace-only nodes are discarded for
+              grid/flex layout so the visual is unchanged. */}
+          {" "}
+          <span className={styles.title}>
+            <span className={styles.titleWord} data-chars>
+              LUCAS
+            </span>
+            {" "}
+            <span className={styles.titleWord} data-chars>
+              AUFRERE
+            </span>
           </span>
         </h1>
 

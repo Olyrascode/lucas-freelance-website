@@ -22,22 +22,32 @@ export function buildPageMetadata({
   path,
 }: PageMetadataInput): Metadata {
   const canonical = path === "/" ? "/" : path;
+  const ogTitle = `${title} · ${siteName}`;
   return {
     title,
     description,
     alternates: { canonical },
     openGraph: {
-      title: `${title} · ${siteName}`,
+      title: ogTitle,
       description,
       url: canonical,
       type: "website",
       locale: "fr_FR",
       siteName,
+      images: [
+        {
+          url: "/og-image.jpg",
+          width: 1200,
+          height: 630,
+          alt: ogTitle,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
-      title: `${title} · ${siteName}`,
+      title: ogTitle,
       description,
+      images: ["/og-image.jpg"],
     },
   };
 }

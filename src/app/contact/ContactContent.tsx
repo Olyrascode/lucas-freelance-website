@@ -59,11 +59,11 @@ function InfoBlock(): React.ReactElement {
             Email
           </span>
           <a
-            href="mailto:contact@lucasaufrere.com"
+            href="mailto:lucas@fyconic.fr"
             className={styles.infoValue}
             data-lines
           >
-            contact@lucasaufrere.com
+            lucas@fyconic.fr
           </a>
         </li>
         <li className={styles.infoItem}>
@@ -275,7 +275,9 @@ export function ContactContent(): React.ReactElement {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (
+    event: FormEvent<HTMLFormElement>,
+  ): Promise<void> => {
     event.preventDefault();
     if (status === "submitting" || status === "success") return;
 
@@ -299,11 +301,36 @@ export function ContactContent(): React.ReactElement {
     }
 
     setStatus("submitting");
-    // Stub submission — replace this with a real backend call (server
-    // action, Formspree, Resend, etc.) when wiring the form to a service.
-    window.setTimeout(() => {
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prenom: form.prenom.trim(),
+          nom: form.nom.trim(),
+          email: form.email.trim(),
+          telephone: form.telephone.trim(),
+          message: form.message.trim(),
+        }),
+      });
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        setStatus("error");
+        setErrorMessage(
+          data?.error ??
+            "Impossible d'envoyer le message pour le moment. Réessayez dans un instant.",
+        );
+        return;
+      }
       setStatus("success");
-    }, 900);
+    } catch {
+      setStatus("error");
+      setErrorMessage(
+        "Erreur réseau — vérifiez votre connexion et réessayez.",
+      );
+    }
   };
 
   return (
