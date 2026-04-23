@@ -120,7 +120,7 @@
 .sectionBody {
   display: flex;
   flex-direction: column;
-  gap: $space-3;
+  gap: $space-4;
   @include font-body($font-body-l);
   color: $color-fg-secondary;
   max-width: 40rem;
@@ -135,4 +135,44 @@
   p {
     margin: 0;
   }
+}
+
+// h3 sub-section under each h2 — adds depth to the heading hierarchy
+// without breaking the editorial flow.
+.subBlock {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.subHeading {
+  @include font-label($font-label-sm);
+  color: $color-fg-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
+  padding-bottom: $space-2;
+  border-bottom: 1px solid $color-line-subtle;
+}
+
+// Skill chips — flat list of technologies grouped under each h3
+// "Compétences clés" sub-section. Bordered chips with mono font for
+// editorial consistency with the rest of the site.
+.skillChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-1 $space-2;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.skillChip {
+  font-family: $font-mono;
+  font-size: $font-label-sm;
+  color: $color-fg-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.3rem $space-2;
+  border: 1px solid $color-line;
 }

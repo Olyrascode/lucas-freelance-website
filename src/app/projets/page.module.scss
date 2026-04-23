@@ -1,0 +1,35 @@
+@use "styles/variables" as *;
+@use "styles/mixins" as *;
+
+.srOnly {
+  @include visually-hidden;
+}
+
+// The rotonde keeps its full-bleed 100dvh hero behavior; the H2 above
+// the canvas sits as an editorial label in the top-left, behind the
+// header. position:absolute keeps it off the canvas's hit-test area
+// while still showing visibly to users.
+.rotondeSection {
+  position: relative;
+  width: 100%;
+  min-height: 100dvh;
+  background-color: #050505;
+}
+
+.rotondeTitle {
+  position: absolute;
+  top: calc(#{$header-height-mobile} + #{$space-3});
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  margin: 0;
+  pointer-events: none;
+  @include font-label;
+  color: $color-fg-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+
+  @include tablet-up {
+    top: calc(#{$header-height-desktop} + #{$space-3});
+  }
+}

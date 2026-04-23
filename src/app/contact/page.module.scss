@@ -132,11 +132,16 @@
 .infoLabel {
   @include font-label($font-label-sm);
   color: $color-fg-muted;
+  // Promoted from <span> to <h3> for SEO depth — neutralise UA defaults
+  // so the visual remains a discrete editorial label.
+  margin: 0;
+  font-weight: inherit;
 }
 
 .infoValue {
   @include font-body($font-body-m);
   color: $color-fg;
+  margin: 0;
 
   &[href] {
     transition: color $motion-duration-fast $motion-ease-soft;
@@ -297,4 +302,107 @@
   padding: $space-3;
   border: 1px solid rgba(255, 95, 95, 0.4);
   background-color: rgba(255, 95, 95, 0.06);
+}
+
+// --- Bonus SEO sections (Pour quels projets / Comment ça se passe) ----
+
+.section {
+  padding-block: $space-6;
+  border-top: 1px solid $color-line;
+
+  @include desktop-up {
+    padding-block: $space-7;
+  }
+}
+
+.section .inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-3;
+
+  @include desktop-up {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+    grid-template-rows: auto auto;
+    column-gap: $space-5;
+    row-gap: $space-3;
+    align-items: start;
+  }
+}
+
+.section .sectionIndex {
+  @include desktop-up {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+.section .sectionTitle {
+  @include font-display($font-display-l);
+  margin-bottom: 0;
+
+  @include desktop-up {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+
+.sectionBody {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+  max-width: 40rem;
+
+  @include desktop-up {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    padding-top: 8px;
+  }
+}
+
+.subBlock {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+}
+
+.subHeading {
+  @include font-label($font-label-sm);
+  color: $color-fg-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
+  padding-bottom: $space-2;
+  border-bottom: 1px solid $color-line-subtle;
+  display: flex;
+  align-items: baseline;
+  gap: $space-2;
+}
+
+.stepIndex {
+  font-family: $font-mono;
+  color: $color-fg-subtle;
+}
+
+.subBody {
+  @include font-body($font-body-m);
+  color: $color-fg-secondary;
+  margin: 0;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+  max-width: 40rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  @include desktop-up {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    padding-top: 8px;
+  }
 }

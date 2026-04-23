@@ -135,50 +135,6 @@
   }
 }
 
-.overlay {
-  position: fixed;
-  inset: 0;
-  z-index: $z-modal;
-  background-color: $color-bg;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity $motion-duration-fast $motion-ease-soft;
-
-  &[data-open="true"] {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  @include tablet-up {
-    display: none;
-  }
-}
-
-.overlayNav {
-  width: 100%;
-  padding: 0 $gutter;
-}
-
-.overlayMenu {
-  display: flex;
-  flex-direction: column;
-  gap: $space-3;
-  align-items: center;
-  text-align: center;
-}
-
-.overlayLink {
-  font-family: $font-display;
-  font-size: $font-display-m;
-  font-weight: 400;
-  color: $color-fg;
-  letter-spacing: -0.02em;
-  line-height: 1;
-
-  &[aria-current="page"] {
-    color: $color-fg-muted;
-  }
-}
+// Mobile menu lives in its own component (MobileMenu.tsx) and is rendered
+// via portal directly into document.body — no overlay classes needed in
+// this file anymore.

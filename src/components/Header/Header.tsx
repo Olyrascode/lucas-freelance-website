@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { TransitionLink as Link } from "@/components/transitions/TransitionLink";
 import { usePathname } from "next/navigation";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useLenis } from "@/hooks/useLenis";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { primaryNav } from "@/lib/nav";
+import { MobileMenu } from "./MobileMenu";
 import styles from "./Header.module.scss";
 
 type HeaderState = "top" | "scrolled-up" | "scrolled-down";
@@ -17,7 +18,6 @@ export function Header(): React.ReactElement {
   const lenis = useLenis();
   const reducedMotion = usePrefersReducedMotion();
   const [menuOpen, setMenuOpen] = useState(false);
-  const overlayRef = useRef<HTMLDivElement>(null);
 
   const headerState: HeaderState = (() => {
     if (reducedMotion) return "scrolled-up";
@@ -36,6 +36,7 @@ export function Header(): React.ReactElement {
     setMenuOpen(false);
   }, []);
 
+  // Lock scroll while the menu is open, and let Escape close it.
   useEffect(() => {
     if (!menuOpen) {
       lenis?.start();
@@ -54,19 +55,17 @@ export function Header(): React.ReactElement {
     };
   }, [menuOpen, lenis, closeMenu]);
 
-  useEffect(() => {
-    if (!menuOpen) return;
-    const firstLink = overlayRef.current?.querySelector<HTMLAnchorElement>("a");
-    firstLink?.focus();
-  }, [menuOpen]);
-
   const isActive = (href: string): boolean => {
     if (href === "/") return pathname === "/";
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
   return (
-    <header className={styles.root} data-state={headerState}>
+    <header
+      className={styles.root}
+      data-state={headerState}
+      data-menu-open={menuOpen ? "true" : "false"}
+    >
       <div className={styles.inner}>
         <Link href="/" className={styles.logo}>
           Lucas Aufrère
@@ -94,38 +93,16 @@ export function Header(): React.ReactElement {
           aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
           aria-expanded={menuOpen}
           aria-controls="mobile-nav-overlay"
-          onClick={() => setMenuOpen((v) => !v)}
+          onClick={() => {
+            setMenuOpen((v) => !v);
+          }}
         >
           <span className={styles.burgerLine} data-open={menuOpen} />
           <span className={styles.burgerLine} data-open={menuOpen} />
         </button>
       </div>
 
-      <div
-        id="mobile-nav-overlay"
-        ref={overlayRef}
-        className={styles.overlay}
-        data-open={menuOpen}
-        aria-hidden={!menuOpen}
-      >
-        <nav aria-label="Mobile" className={styles.overlayNav}>
-          <ol className={styles.overlayMenu}>
-            {primaryNav.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={styles.overlayLink}
-                  aria-current={isActive(item.href) ? "page" : undefined}
-                  onClick={closeMenu}
-                  tabIndex={menuOpen ? 0 : -1}
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ol>
-        </nav>
-      </div>
+      <MobileMenu open={menuOpen} onClose={closeMenu} isActive={isActive} />
     </header>
   );
 }

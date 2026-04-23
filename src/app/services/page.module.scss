@@ -116,6 +116,7 @@
 .sectionTitle {
   @include font-display($font-display-l);
   color: $color-fg;
+  margin: 0;
 
   @include desktop-up {
     grid-column: 1;
@@ -142,27 +143,19 @@
   color: $color-fg-secondary;
 }
 
-.lists {
-  display: flex;
-  flex-direction: column;
-  gap: $space-3;
-
-  @include tablet-up {
-    flex-direction: row;
-    gap: $space-4;
-  }
-}
-
-.listBlock {
-  flex: 1;
+// Each h3 sub-section under a service.
+.subBlock {
   display: flex;
   flex-direction: column;
   gap: $space-2;
 }
 
-.listLabel {
+.subHeading {
   @include font-label($font-label-sm);
   color: $color-fg-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
   padding-bottom: $space-2;
   border-bottom: 1px solid $color-line-subtle;
 }
@@ -171,6 +164,9 @@
   display: flex;
   flex-direction: column;
   gap: $space-1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 
   li {
     @include font-body($font-body-s);
@@ -185,5 +181,172 @@
       flex: 0 0 auto;
     }
   }
+}
+
+.metaList {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  margin: 0;
+}
+
+.metaRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.25rem;
+  padding-block: $space-1;
+  border-bottom: 1px solid $color-line-subtle;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  @include tablet-up {
+    grid-template-columns: minmax(8rem, 10rem) 1fr;
+    column-gap: $space-3;
+    align-items: baseline;
+  }
+}
+
+.metaTerm {
+  @include font-label($font-label-sm);
+  color: $color-fg-muted;
+  margin: 0;
+}
+
+.metaValue {
+  @include font-body($font-body-m);
+  color: $color-fg;
+  margin: 0;
+}
+
+// --- FAQ -----------------------------------------------------------------
+
+.faqSection {
+  padding-block: $space-7;
+  border-top: 1px solid $color-line;
+}
+
+.faqHeader {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-3;
+  margin-bottom: $space-5;
+
+  @include desktop-up {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+    column-gap: $space-5;
+    row-gap: $space-3;
+    align-items: start;
+  }
+}
+
+.faqTitle {
+  @include font-display($font-display-l);
+  color: $color-fg;
+  margin: 0;
+
+  @include desktop-up {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+
+.faqList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid $color-line;
+}
+
+.faqItem {
+  border-bottom: 1px solid $color-line;
+  // Whole row is the click target — clicking the title strip OR the
+  // open answer area both toggle. The inner <button> still gives
+  // keyboard / screen-reader semantics; its click bubbles up.
+  cursor: pointer;
+}
+
+.faqHeading {
+  margin: 0;
+  font: inherit;
+}
+
+.faqButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  padding: $space-3 0;
+  background: transparent;
+  border: none;
+  color: $color-fg;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: color $motion-duration-fast $motion-ease-soft;
+
+  &:hover,
+  &:focus-visible {
+    color: $color-fg-secondary;
+  }
+
+  &:focus-visible {
+    outline: 1px dashed $color-fg;
+    outline-offset: 4px;
+  }
+}
+
+.faqQuestion {
+  @include font-display($font-display-s);
+  flex: 1;
+}
+
+.faqIcon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-fg-muted;
+  transition: color $motion-duration-fast $motion-ease-soft;
+}
+
+.faqIconCross {
+  transform-origin: 12px 12px;
+  transition: transform $motion-duration-base $motion-ease-soft;
+}
+
+.faqItem[data-open="true"] .faqIconCross {
+  transform: rotate(90deg) scaleY(0);
+}
+
+// Smooth open/close via CSS grid template rows — no measurement, no
+// JS height tracking. Content always rendered (so search engines and
+// screen readers see every answer).
+.faqPanel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows $motion-duration-medium $motion-ease-soft;
+}
+
+.faqItem[data-open="true"] .faqPanel {
+  grid-template-rows: 1fr;
+}
+
+.faqPanelInner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.faqAnswer {
+  @include font-body($font-body-m);
+  color: $color-fg-secondary;
+  // Full available width — the answer fills the FAQ row across the
+  // whole container, no narrow reading column constraint.
+  width: 100%;
+  max-width: none;
+  padding-bottom: $space-4;
+  margin: 0;
 }
 

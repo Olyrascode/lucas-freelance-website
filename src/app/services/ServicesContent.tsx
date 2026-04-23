@@ -1,90 +1,9 @@
 "use client";
 
 import { useScrollReveal } from "@/hooks/useScrollReveal";
+import { faqEntries, services, type ServiceData } from "@/data/services";
+import { FaqItem } from "./FaqItem";
 import styles from "./page.module.scss";
-
-interface Service {
-  readonly index: string;
-  readonly title: string;
-  readonly description: string;
-  readonly scope: readonly string[];
-  readonly deliverables: readonly string[];
-}
-
-const services: readonly Service[] = [
-  {
-    index: "S.01",
-    title: "Sites web sur-mesure",
-    description:
-      "Conception et développement complet d’un site web pensé comme un objet éditorial. De l’architecture front-end à la mise en ligne, en collaboration avec votre équipe ou la mienne.",
-    scope: [
-      "Architecture Next.js + React 19, TypeScript strict",
-      "Intégration design system + SCSS Modules",
-      "Animations GSAP, scroll narratif, transitions soignées",
-      "SEO technique, métadonnées, structured data",
-      "Performance Lighthouse, Core Web Vitals",
-    ],
-    deliverables: [
-      "Code source versionné Git",
-      "Déploiement Vercel ou hébergeur de votre choix",
-      "Documentation projet & passation",
-    ],
-  },
-  {
-    index: "S.02",
-    title: "Animations & interactions web",
-    description:
-      "Mission focalisée sur la couche animation d’un site existant ou en cours. Reveal typographique, scroll-tied, micro-interactions, transitions de page.",
-    scope: [
-      "Audit des animations existantes",
-      "GSAP 3 + ScrollTrigger + Lenis",
-      "Split-line mask reveal, scroll sequences canvas",
-      "Respect prefers-reduced-motion",
-      "Optimisation per-frame, will-change ciblé",
-    ],
-    deliverables: [
-      "Composants animés intégrés au repo",
-      "Documentation des patterns utilisés",
-      "Guide d’extension pour votre équipe",
-    ],
-  },
-  {
-    index: "S.03",
-    title: "Front-end white-label",
-    description:
-      "J’interviens en renfort pour agences et studios, sous votre nom, sur vos deadlines. Brief direct avec vos chefs de projet, livraison alignée sur vos process.",
-    scope: [
-      "Intégration React / Next.js sur design existant",
-      "Travail sur design system en place",
-      "Pull requests sur votre repo",
-      "Revue de code + commentaires",
-      "Disponibilité daily standup si besoin",
-    ],
-    deliverables: [
-      "PRs prêtes à merger sur votre branche",
-      "Code conforme à vos conventions",
-      "Reporting régulier sur l’avancée",
-    ],
-  },
-  {
-    index: "S.04",
-    title: "SEO technique & performance",
-    description:
-      "Audit complet et plan d’action priorisé pour un site existant. Métriques claires, livrables actionables. Implémentation des correctifs en option.",
-    scope: [
-      "Audit Lighthouse, PageSpeed, WebPageTest",
-      "Analyse Core Web Vitals (LCP, INP, CLS)",
-      "Audit structured data + sitemap + robots",
-      "Vérification accessibilité (WCAG 2.1 AA)",
-      "Recommandations rédigées et hiérarchisées",
-    ],
-    deliverables: [
-      "Rapport d’audit PDF + slides",
-      "Plan d’action priorisé par impact",
-      "Implémentation au forfait sur demande",
-    ],
-  },
-];
 
 function HeroBlock(): React.ReactElement {
   const ref = useScrollReveal<HTMLElement>({ stagger: 0.1 });
@@ -108,15 +27,16 @@ function HeroBlock(): React.ReactElement {
 }
 
 interface ServiceBlockProps {
-  readonly service: Service;
+  readonly service: ServiceData;
 }
 
 function ServiceBlock({ service }: ServiceBlockProps): React.ReactElement {
   const ref = useScrollReveal<HTMLElement>({ stagger: 0.05 });
+  const titleId = `service-${service.slug}-title`;
   return (
     <section
       className={styles.section}
-      aria-labelledby={`service-${service.index}`}
+      aria-labelledby={titleId}
       ref={ref}
     >
       <div className={styles.inner}>
@@ -125,7 +45,7 @@ function ServiceBlock({ service }: ServiceBlockProps): React.ReactElement {
             {service.index}
           </p>
           <h2
-            id={`service-${service.index}`}
+            id={titleId}
             className={styles.sectionTitle}
             data-lines
           >
@@ -135,34 +55,94 @@ function ServiceBlock({ service }: ServiceBlockProps): React.ReactElement {
             <p className={styles.serviceDesc} data-lines>
               {service.description}
             </p>
-            <div className={styles.lists}>
-              <div className={styles.listBlock}>
-                <p className={styles.listLabel} data-lines>
-                  Périmètre
-                </p>
-                <ul className={styles.bullets}>
-                  {service.scope.map((item) => (
-                    <li key={item} data-lines>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className={styles.listBlock}>
-                <p className={styles.listLabel} data-lines>
-                  Livrables
-                </p>
-                <ul className={styles.bullets}>
-                  {service.deliverables.map((item) => (
-                    <li key={item} data-lines>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+
+            <div className={styles.subBlock}>
+              <h3 className={styles.subHeading} data-lines>
+                Périmètre
+              </h3>
+              <ul className={styles.bullets}>
+                {service.scope.map((item) => (
+                  <li key={item} data-lines>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className={styles.subBlock}>
+              <h3 className={styles.subHeading} data-lines>
+                Tarif &amp; délais
+              </h3>
+              <dl className={styles.metaList}>
+                <div className={styles.metaRow}>
+                  <dt className={styles.metaTerm} data-lines>
+                    Tarif indicatif
+                  </dt>
+                  <dd className={styles.metaValue} data-lines>
+                    {service.pricing.label}
+                  </dd>
+                </div>
+                <div className={styles.metaRow}>
+                  <dt className={styles.metaTerm} data-lines>
+                    Délais
+                  </dt>
+                  <dd className={styles.metaValue} data-lines>
+                    {service.timeline}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+
+            <div className={styles.subBlock}>
+              <h3 className={styles.subHeading} data-lines>
+                Livrables
+              </h3>
+              <ul className={styles.bullets}>
+                {service.deliverables.map((item) => (
+                  <li key={item} data-lines>
+                    {item}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>
+      </div>
+    </section>
+  );
+}
+
+function FaqBlock(): React.ReactElement {
+  const ref = useScrollReveal<HTMLElement>({ stagger: 0.05 });
+  return (
+    <section
+      className={styles.faqSection}
+      aria-labelledby="services-faq-title"
+      ref={ref}
+    >
+      <div className={styles.inner}>
+        <div className={styles.faqHeader}>
+          <p className={styles.sectionIndex} data-lines>
+            FAQ
+          </p>
+          <h2
+            id="services-faq-title"
+            className={styles.faqTitle}
+            data-lines
+          >
+            Questions fréquentes
+          </h2>
+        </div>
+        <ol className={styles.faqList}>
+          {faqEntries.map((entry) => (
+            <FaqItem
+              key={entry.id}
+              id={entry.id}
+              question={entry.question}
+              answer={entry.answer}
+            />
+          ))}
+        </ol>
       </div>
     </section>
   );
@@ -173,8 +153,9 @@ export function ServicesContent(): React.ReactElement {
     <article className={styles.root}>
       <HeroBlock />
       {services.map((service) => (
-        <ServiceBlock key={service.index} service={service} />
+        <ServiceBlock key={service.slug} service={service} />
       ))}
+      <FaqBlock />
     </article>
   );
 }

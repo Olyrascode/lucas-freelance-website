@@ -1,0 +1,201 @@
+@use "styles/variables" as *;
+@use "styles/mixins" as *;
+
+// SEO-only: the entire fallback section is collapsed via the
+// visually-hidden pattern. Crawlers and screen readers still parse the
+// full structured content (h2 / h3 / next/image alt / paragraphs / link
+// hrefs / stack list), but visually it occupies no space and never
+// breaks the rotonde's full-bleed 100dvh hero.
+.root {
+  @include visually-hidden;
+  // Allow the long descriptions / list rows to keep their wrapping in
+  // case any tool (rare) bypasses the clip and reads the visible flow.
+  white-space: normal;
+}
+
+.inner {
+  @include container;
+  display: flex;
+  flex-direction: column;
+  gap: $space-6;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-3;
+
+  @include desktop-up {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+    column-gap: $space-5;
+    align-items: start;
+  }
+}
+
+.eyebrow {
+  @include font-label;
+  color: $color-fg-muted;
+
+  @include desktop-up {
+    grid-column: 1;
+  }
+}
+
+.title {
+  font-family: $font-display;
+  font-size: clamp(2.5rem, 7vw, 6rem);
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: $color-fg;
+  text-transform: uppercase;
+  margin: 0;
+
+  @include desktop-up {
+    grid-column: 1;
+  }
+}
+
+.lead {
+  @include font-body($font-body-l);
+  color: $color-fg-secondary;
+  max-width: 36rem;
+
+  @include desktop-up {
+    grid-column: 2;
+    align-self: end;
+    text-align: right;
+    justify-self: end;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-5;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include desktop-up {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: $space-5;
+    row-gap: $space-6;
+  }
+}
+
+.cell {
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+}
+
+.media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background-color: #111;
+  overflow: hidden;
+}
+
+.image {
+  object-fit: cover;
+  object-position: center;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.meta {
+  font-family: $font-mono;
+  font-size: $font-label-sm;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $color-fg-muted;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.metaIndex {
+  color: $color-fg;
+}
+
+.metaSep {
+  color: $color-fg-subtle;
+}
+
+.name {
+  font-family: $font-display;
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: $color-fg;
+  margin: 0;
+}
+
+.role {
+  @include font-body($font-body-s);
+  color: $color-fg-secondary;
+  font-style: italic;
+  margin: 0;
+}
+
+.description {
+  @include font-body($font-body-m);
+  color: $color-fg-secondary;
+  margin: 0;
+  max-width: 38rem;
+}
+
+.stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-1 $space-2;
+  list-style: none;
+  padding: 0;
+  margin: $space-1 0 0;
+}
+
+.stackItem {
+  font-family: $font-mono;
+  font-size: $font-label-sm;
+  color: $color-fg-muted;
+  padding: 0.25rem $space-2;
+  border: 1px solid $color-line;
+}
+
+.link {
+  @include font-body($font-body-s);
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  color: $color-fg;
+  border-bottom: 1px solid $color-line;
+  padding-block: $space-1;
+  width: max-content;
+  margin-top: $space-2;
+  transition: border-color $motion-duration-fast $motion-ease-soft;
+
+  svg {
+    transition: transform $motion-duration-fast $motion-ease-soft;
+  }
+
+  &:hover {
+    border-color: $color-fg;
+
+    svg {
+      transform: translate(2px, -2px);
+    }
+  }
+}

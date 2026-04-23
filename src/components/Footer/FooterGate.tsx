@@ -3,6 +3,8 @@
 import { usePathname } from "next/navigation";
 import { Footer } from "./Footer";
 
+// /projets is a single 100dvh canvas hero with a visually-hidden SEO
+// fallback (no scrollable content), so no footer should anchor below.
 const HIDDEN_PREFIXES: readonly string[] = ["/projets"];
 // Routes that already host their own contact form / CTA. We strip the
 // "Parlons-en" editorial top from the footer there so the page doesn't

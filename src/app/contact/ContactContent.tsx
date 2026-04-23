@@ -22,6 +22,62 @@ const initialForm: FormState = {
 
 type SubmitStatus = "idle" | "submitting" | "success" | "error";
 
+interface ProjectType {
+  readonly title: string;
+  readonly description: string;
+}
+
+const projectTypes: readonly ProjectType[] = [
+  {
+    title: "Sites web sur-mesure",
+    description:
+      "Sites éditoriaux, vitrines premium, refontes complètes Next.js / React avec animations GSAP et SEO technique.",
+  },
+  {
+    title: "Animations & interactions",
+    description:
+      "Mission focalisée sur la couche animation — split-line reveal, scroll narratif, transitions de page, micro-interactions.",
+  },
+  {
+    title: "Front-end white-label",
+    description:
+      "Renfort technique pour agences et studios, sous votre marque, sur vos process et votre repo.",
+  },
+  {
+    title: "Audit SEO & performance",
+    description:
+      "Audit Lighthouse + Core Web Vitals + structured data, plan d'action priorisé, implémentation au forfait.",
+  },
+];
+
+interface ProcessStep {
+  readonly title: string;
+  readonly description: string;
+}
+
+const processSteps: readonly ProcessStep[] = [
+  {
+    title: "Premier échange",
+    description:
+      "Vous m'écrivez via le formulaire ou par email. Je reviens vers vous sous 48h ouvrées avec une première lecture du périmètre et les questions de cadrage.",
+  },
+  {
+    title: "Devis & cadrage",
+    description:
+      "Après un appel découverte (30-45 min), je rédige un devis détaillé poste par poste — périmètre, livrables, rétro-planning, conditions de paiement.",
+  },
+  {
+    title: "Production",
+    description:
+      "Démarrage sur acompte, sprints courts avec démos régulières (toutes les 1-2 semaines). Code versionné Git, environnement de preview Vercel à chaque push.",
+  },
+  {
+    title: "Livraison & suivi",
+    description:
+      "Mise en production, passation documentée, formation rapide à votre équipe. Maintenance optionnelle au mois ou à la demande.",
+  },
+];
+
 function HeroBlock(): React.ReactElement {
   const ref = useScrollReveal<HTMLElement>({ stagger: 0.1 });
   return (
@@ -55,9 +111,9 @@ function InfoBlock(): React.ReactElement {
       </h2>
       <ul className={styles.infoList}>
         <li className={styles.infoItem}>
-          <span className={styles.infoLabel} data-lines>
+          <h3 className={styles.infoLabel} data-lines>
             Email
-          </span>
+          </h3>
           <a
             href="mailto:lucas@fyconic.fr"
             className={styles.infoValue}
@@ -67,20 +123,20 @@ function InfoBlock(): React.ReactElement {
           </a>
         </li>
         <li className={styles.infoItem}>
-          <span className={styles.infoLabel} data-lines>
+          <h3 className={styles.infoLabel} data-lines>
             Localisation
-          </span>
-          <span className={styles.infoValue} data-lines>
-            Clermont-Ferrand · Distanciel
-          </span>
+          </h3>
+          <p className={styles.infoValue} data-lines>
+            Clermont-Ferrand · Distanciel France &amp; international
+          </p>
         </li>
         <li className={styles.infoItem}>
-          <span className={styles.infoLabel} data-lines>
+          <h3 className={styles.infoLabel} data-lines>
             Disponibilité
-          </span>
-          <span className={styles.infoValue} data-lines>
-            Réponse sous 48h ouvrées
-          </span>
+          </h3>
+          <p className={styles.infoValue} data-lines>
+            Réponse sous 48h ouvrées — devis sous une semaine après cadrage
+          </p>
         </li>
       </ul>
     </section>
@@ -266,6 +322,81 @@ function FormBlock({
   );
 }
 
+function ProjectTypesBlock(): React.ReactElement {
+  const ref = useScrollReveal<HTMLElement>();
+  return (
+    <section
+      className={styles.section}
+      aria-labelledby="contact-projets"
+      ref={ref}
+    >
+      <div className={styles.inner}>
+        <p className={styles.sectionIndex} data-lines>
+          C.03
+        </p>
+        <h2
+          id="contact-projets"
+          className={styles.sectionTitle}
+          data-lines
+        >
+          Pour quels projets
+        </h2>
+        <div className={styles.sectionBody}>
+          {projectTypes.map((entry) => (
+            <div key={entry.title} className={styles.subBlock}>
+              <h3 className={styles.subHeading} data-lines>
+                {entry.title}
+              </h3>
+              <p className={styles.subBody} data-lines>
+                {entry.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProcessBlock(): React.ReactElement {
+  const ref = useScrollReveal<HTMLElement>();
+  return (
+    <section
+      className={styles.section}
+      aria-labelledby="contact-process"
+      ref={ref}
+    >
+      <div className={styles.inner}>
+        <p className={styles.sectionIndex} data-lines>
+          C.04
+        </p>
+        <h2
+          id="contact-process"
+          className={styles.sectionTitle}
+          data-lines
+        >
+          Comment ça se passe
+        </h2>
+        <ol className={styles.steps}>
+          {processSteps.map((step, idx) => (
+            <li key={step.title} className={styles.subBlock}>
+              <h3 className={styles.subHeading} data-lines>
+                <span className={styles.stepIndex}>
+                  {(idx + 1).toString().padStart(2, "0")}
+                </span>
+                <span>{step.title}</span>
+              </h3>
+              <p className={styles.subBody} data-lines>
+                {step.description}
+              </p>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  );
+}
+
 export function ContactContent(): React.ReactElement {
   const [form, setForm] = useState<FormState>(initialForm);
   const [status, setStatus] = useState<SubmitStatus>("idle");
@@ -350,6 +481,8 @@ export function ContactContent(): React.ReactElement {
           </div>
         </div>
       </div>
+      <ProjectTypesBlock />
+      <ProcessBlock />
     </article>
   );
 }

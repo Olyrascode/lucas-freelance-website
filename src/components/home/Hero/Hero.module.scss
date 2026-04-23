@@ -96,16 +96,26 @@
 .topRight {
   grid-row: 1;
   align-self: center;
-  justify-self: end;
+  // Mobile-first: occupy the whole column, left-aligned. Without this
+  // the previous `max-width: 34rem; align-items: flex-end` defaults
+  // forced the box wider than narrow viewports and the lead + CTAs
+  // overflowed the right edge.
+  justify-self: stretch;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: $space-3;
-  max-width: 34rem;
-  padding-top: $space-6;
-  // re-enable hit testing on the right-side text column so CTAs + links
-  // work despite .inner being pointer-events: none.
+  width: 100%;
+  padding-top: $space-5;
   pointer-events: auto;
+
+  @include tablet-up {
+    justify-self: end;
+    align-items: flex-end;
+    width: auto;
+    max-width: 34rem;
+    padding-top: $space-6;
+  }
 
   @include desktop-up {
     gap: $space-4;
@@ -118,7 +128,11 @@
   display: flex;
   flex-wrap: wrap;
   gap: $space-2;
-  justify-content: flex-end;
+  justify-content: flex-start;
+
+  @include tablet-up {
+    justify-content: flex-end;
+  }
 }
 
 .ctaPrimary {
@@ -173,8 +187,18 @@
 .lead {
   @include font-body($font-body-l);
   color: $color-fg-secondary;
-  text-align: right;
-  max-width: 34rem;
+  // Mobile-first: full container width, natural left alignment for
+  // legibility on narrow screens. The right-aligned editorial layout
+  // kicks back in from tablet up where the column has room to breathe.
+  width: 100%;
+  max-width: none;
+  text-align: left;
+
+  @include tablet-up {
+    width: auto;
+    max-width: 34rem;
+    text-align: right;
+  }
 }
 
 // The <h1> wraps both the eyebrow and the wordmark for semantics, but we
@@ -202,16 +226,23 @@
 .title {
   grid-row: 3;
   font-family: $font-display;
-  font-size: clamp(3rem, 14vw, 17rem);
+  // clamp tightened on the low end so the wordmark doesn't blow past the
+  // viewport on narrow screens (≤320px). flex-wrap: wrap lets LUCAS /
+  // AUFRÈRE stack onto two lines when the row can't hold them side by
+  // side. padding-right gives slack for the last letter's ink overhang.
+  font-size: clamp(2.25rem, 12vw, 17rem);
   font-weight: 500;
   line-height: 0.9;
   letter-spacing: -0.01em;
   color: $color-fg;
+  padding-right: 0.1em;
   display: flex;
-  flex-wrap: nowrap;
+  // Mobile: wrap so LUCAS / AUFRÈRE stack when the row can't hold them.
+  // Tablet+: no wrap — the wordmark stays as a single editorial line.
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: flex-start;
-  gap: 0.25em;
+  gap: 0 0.25em;
   width: 100%;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
@@ -220,6 +251,10 @@
   // lower edge. Without pointer-events: none here (and on its spans), the
   // title's box intercepts hover events meant for the tile grid.
   pointer-events: none;
+
+  @include tablet-up {
+    flex-wrap: nowrap;
+  }
 }
 
 .title * {

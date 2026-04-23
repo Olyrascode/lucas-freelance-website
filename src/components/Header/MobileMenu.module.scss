@@ -1,0 +1,178 @@
+@use "styles/variables" as *;
+@use "styles/mixins" as *;
+
+// Full-viewport mobile navigation. Mounted via a portal directly into
+// document.body so no stacking context (header z-index 100, main, etc.)
+// can sneak through. Background is fully opaque $color-bg — no blur,
+// no transparency — and the whole surface sits above everything but
+// below the page-transition curtain (z-index 9999).
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background-color: $color-bg;
+  color: $color-fg;
+  display: flex;
+  flex-direction: column;
+  padding: $space-3 $gutter $space-5;
+  will-change: transform;
+  overflow: hidden;
+
+  // Safe-area for iOS notches etc.
+  padding-top: max(#{$space-3}, env(safe-area-inset-top));
+  padding-bottom: max(#{$space-5}, env(safe-area-inset-bottom));
+
+  @include tablet-up {
+    // The burger is hidden from tablet up, so the menu should never
+    // appear on wider viewports — but defend against edge cases.
+    display: none;
+  }
+}
+
+// --- Top bar ----------------------------------------------------------
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: $header-height-mobile;
+  flex: 0 0 auto;
+}
+
+.logo {
+  @include font-body($font-body-m);
+  font-weight: 500;
+  color: $color-fg;
+  letter-spacing: -0.01em;
+}
+
+.closeButton {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: $color-fg;
+  cursor: pointer;
+  padding: 0;
+
+  &:focus-visible {
+    outline: 1px dashed currentColor;
+    outline-offset: 4px;
+  }
+}
+
+.closeLine {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  height: 1px;
+  background-color: currentColor;
+
+  &:first-child {
+    transform: rotate(45deg);
+  }
+
+  &:last-child {
+    transform: rotate(-45deg);
+  }
+}
+
+// --- Links ------------------------------------------------------------
+
+.nav {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  padding-block: $space-4;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.item {
+  display: flex;
+  align-items: baseline;
+  gap: $space-3;
+}
+
+.itemIndex {
+  font-family: $font-mono;
+  font-size: $font-label-sm;
+  color: $color-fg-subtle;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  flex: 0 0 auto;
+}
+
+// Mask wrapper — the inner motion span slides from y:110% to y:0%
+// through this overflow-hidden clip for the split-line reveal effect.
+.linkMask {
+  display: inline-block;
+  overflow: hidden;
+  padding-top: 0.1em;
+  padding-bottom: 0.18em;
+  margin-top: -0.1em;
+  margin-bottom: -0.18em;
+  line-height: 1;
+}
+
+.linkInner {
+  display: inline-block;
+  will-change: transform;
+}
+
+.link {
+  font-family: $font-display;
+  font-size: clamp(2.25rem, 11vw, 3.5rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: $color-fg;
+  text-transform: uppercase;
+  display: inline-block;
+  transition: color $motion-duration-fast $motion-ease-soft;
+
+  &[aria-current="page"] {
+    color: $color-fg-muted;
+  }
+
+  &:focus-visible {
+    outline: 1px dashed currentColor;
+    outline-offset: 4px;
+  }
+}
+
+// Inner span used by GlitchLink — the scramble mutates this element's
+// textContent directly. inline-block keeps the layout stable while the
+// cycling glyphs swap in and out.
+.linkText {
+  display: inline-block;
+}
+
+// --- Footer -----------------------------------------------------------
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  padding-top: $space-3;
+  border-top: 1px solid $color-line;
+  flex: 0 0 auto;
+}
+
+.footerEmail {
+  @include font-body($font-body-s);
+  color: $color-fg-secondary;
+  letter-spacing: 0.01em;
+}
