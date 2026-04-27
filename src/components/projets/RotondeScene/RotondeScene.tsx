@@ -641,7 +641,9 @@ function ProjectPlane({
         <primitive object={material} attach="material" />
       </mesh>
 
-      {showLabels ? <ProjectLabels project={project} /> : null}
+      {showLabels ? (
+        <ProjectLabels project={project} planeKey={planeKey} />
+      ) : null}
     </group>
   );
 }
@@ -796,14 +798,31 @@ function FocusedGalleryInner({
 
 interface ProjectLabelsProps {
   readonly project: Project;
+  readonly planeKey: string;
 }
 
-function ProjectLabels({ project }: ProjectLabelsProps): React.ReactElement {
+function ProjectLabels({
+  project,
+  planeKey,
+}: ProjectLabelsProps): React.ReactElement {
   const indexLabel = `${project.index} / ${TOTAL_SLOTS}`;
   const metaLabel = `${project.year} · ${project.stack}`;
+  const groupRef = useRef<Group>(null);
+
+  // Hide the on-plane labels as soon as this plane becomes the focused
+  // one. The focused plane scales up to the slider's target size, which
+  // would otherwise cover the index / name / meta labels (they sit at
+  // fixed Y positions outside the original 8 × 4.5 plane). The side
+  // panel + the gallery counter already carry the same information
+  // when a project is open, so hiding them here keeps the view clean.
+  useFrame(() => {
+    const group = groupRef.current;
+    if (!group) return;
+    group.visible = getFocusPlaneKey() !== planeKey;
+  });
 
   return (
-    <>
+    <group ref={groupRef}>
       <Text
         font={MONO_FONT}
         fontSize={INDEX_SIZE}
@@ -846,6 +865,6 @@ function ProjectLabels({ project }: ProjectLabelsProps): React.ReactElement {
       >
         {metaLabel.toUpperCase()}
       </Text>
-    </>
+    </group>
   );
 }

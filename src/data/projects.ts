@@ -53,6 +53,55 @@ export const baseProjects: readonly Project[] = [
     description:
       "Un site sur-mesure pour Dexnill Productions, studio vidéo. Typographie massive, transitions de pages, intégration soignée des showreels. Next.js, GSAP, Lenis — build performance Lighthouse 95+.",
     schemaKeywords: "Next.js, GSAP, Lenis, site éditorial, animations",
+    gallery: [
+      {
+        src: "/projetSlider/dexnill-productions-lucas-aufrere.webp",
+        caption:
+          "Site vitrine d'un studio de production vidéo, pensé comme un objet éditorial sombre. Next.js, GSAP, Lenis, livré en performance Lighthouse 95+.",
+      },
+      {
+        src: "/projetSlider/dexnill/dexnill hero title.webp",
+        title: "Hero titre",
+        subtitle: "Typographie massive",
+        caption:
+          "Titre plein cadre, animation d'entrée split-line. Le mot devient une affiche avant de devenir une page.",
+      },
+      {
+        src: "/projetSlider/dexnill/dexnill title svg.webp",
+        title: "Titre SVG animé",
+        subtitle: "Trace vectorielle",
+        caption:
+          "Logo et titre tracés en SVG, animation de stroke et de remplissage au scroll. Identité graphique au cœur de la page.",
+      },
+      {
+        src: "/projetSlider/dexnill/dexnill services.webp",
+        title: "Section services",
+        subtitle: "Grille éditoriale",
+        caption:
+          "Liste des prestations rythmée, transitions douces entre items, hiérarchie typographique soignée.",
+      },
+      {
+        src: "/projetSlider/dexnill/dexnill photo gallery.webp",
+        title: "Galerie photo",
+        subtitle: "Showreel intégré",
+        caption:
+          "Mosaïque d'images du studio, hover lift et lecture vidéo plein cadre au clic. Continuité narrative entre photo et vidéo.",
+      },
+      {
+        src: "/projetSlider/dexnill/dexnill portfolio.webp",
+        title: "Portfolio",
+        subtitle: "Cas client",
+        caption:
+          "Page portfolio détaillée, navigation entre projets via transitions de page Lenis-driven.",
+      },
+      {
+        src: "/projetSlider/dexnill/dexnill contact.webp",
+        title: "Contact",
+        subtitle: "Formulaire éditorial",
+        caption:
+          "Formulaire de contact intégré au flux de la page, micro-interactions sur chaque champ, validation discrète.",
+      },
+    ],
   },
   {
     slug: "kengo-kuma",
@@ -85,6 +134,13 @@ export const baseProjects: readonly Project[] = [
           "Photo plein cadre, micro-interactions au scroll, vide assumé qui laisse respirer l'image. Premier contact pensé comme une couverture de magazine.",
       },
       {
+        src: "/projetSlider/kengokuma/kengo kuma slider.webp",
+        title: "Slider de projets",
+        subtitle: "Carrousel horizontal",
+        caption:
+          "Slider de projets en carrousel horizontal, drag fluide et momentum, snap doux sur chaque réalisation.",
+      },
+      {
         src: "/projetSlider/kengokuma/kengo-kuma-card.webp",
         title: "Carte de projet",
         subtitle: "Index d'architecture",
@@ -104,6 +160,13 @@ export const baseProjects: readonly Project[] = [
         subtitle: "Galerie éditoriale",
         caption:
           "Galerie photo plein cadre, captions éditoriales, rythme contrôlé. Chaque image respire, chaque légende a sa place dans le flux.",
+      },
+      {
+        src: "/projetSlider/kengokuma/kengo kuma footer.webp",
+        title: "Footer éditorial",
+        subtitle: "Signature finale",
+        caption:
+          "Footer dense, navigation secondaire, contact mis en avant. Clôture la lecture sans la laisser tomber.",
       },
     ],
   },
@@ -185,6 +248,41 @@ export const baseProjects: readonly Project[] = [
       "Fyconic est mon laboratoire créatif. Des prototypes courts explorant la typographie en mouvement, le scroll narratif, les transitions atmosphériques. Chaque itération sert de terrain d'expérimentation pour les projets clients.",
     liveUrl: "https://fyconic.fr",
     schemaKeywords: "React, GSAP, WebGL, R&D",
+    gallery: [
+      {
+        src: "/projetSlider/fyconic-projet-lucas-aufrere.webp",
+        caption:
+          "Laboratoire créatif personnel — prototypes d'animation, typographie en mouvement, scroll narratif. Terrain d'expérimentation pour les projets clients.",
+      },
+      {
+        src: "/projetSlider/fyconic/fyconic brand.webp",
+        title: "Identité de marque",
+        subtitle: "Branding éditorial",
+        caption:
+          "Logo, palette, typographies. Une identité minimale qui laisse les expérimentations parler pour le studio.",
+      },
+      {
+        src: "/projetSlider/fyconic/fyconic mockup.webp",
+        title: "Mockup d'accueil",
+        subtitle: "Composition expressive",
+        caption:
+          "Hero plein cadre, typographie démesurée, micro-interactions discrètes. Le studio se présente comme une affiche.",
+      },
+      {
+        src: "/projetSlider/fyconic/fyconic expertise.webp",
+        title: "Expertises",
+        subtitle: "Liste éditoriale",
+        caption:
+          "Sections sur les domaines de jeu — animation, motion design, expériences interactives. Une lecture rapide, sans effets superflus.",
+      },
+      {
+        src: "/projetSlider/fyconic/fyconic e commerce.webp",
+        title: "Module e-commerce",
+        subtitle: "Boutique intégrée",
+        caption:
+          "Boutique légère pour les éditions limitées du studio, transitions fluides entre fiche produit et panier.",
+      },
+    ],
   },
 ];
 
