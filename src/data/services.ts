@@ -15,7 +15,9 @@ export interface ServiceData {
   readonly scope: readonly string[];
   readonly deliverables: readonly string[];
   readonly pricing: ServicePricing;
-  readonly timeline: string;
+  // Optional — leave undefined for services that don't have a typical
+  // delivery window (e.g. TJM-based missions).
+  readonly timeline?: string;
   readonly iconKind: ServiceIconKind;
   readonly schemaServiceType: string;
 }
@@ -40,7 +42,7 @@ export const services: readonly ServiceData[] = [
       "Documentation projet & passation",
     ],
     pricing: { minPriceEur: 3500, label: "À partir de 3 500 €" },
-    timeline: "4 à 8 semaines selon le périmètre",
+    timeline: "1 à 8 semaines selon le périmètre",
     iconKind: "build",
     schemaServiceType: "Web design",
   },
@@ -62,8 +64,7 @@ export const services: readonly ServiceData[] = [
       "Documentation des patterns utilisés",
       "Guide d’extension pour votre équipe",
     ],
-    pricing: { minPriceEur: 2000, label: "À partir de 2 000 €" },
-    timeline: "2 à 4 semaines selon la portée",
+    pricing: { minPriceEur: 450, label: "TJM 450 €" },
     iconKind: "motion",
     schemaServiceType: "Motion design",
   },
@@ -85,7 +86,7 @@ export const services: readonly ServiceData[] = [
       "Code conforme à vos conventions",
       "Reporting régulier sur l’avancée",
     ],
-    pricing: { minPriceEur: 360, label: "TJM 360 € (sous-traitance)" },
+    pricing: { minPriceEur: 450, label: "TJM 450 € (sous-traitance)" },
     timeline: "À la mission, daily ou hebdomadaire",
     iconKind: "handshake",
     schemaServiceType: "Subcontracting",
@@ -108,7 +109,7 @@ export const services: readonly ServiceData[] = [
       "Plan d’action priorisé par impact",
       "Implémentation au forfait sur demande",
     ],
-    pricing: { minPriceEur: 800, label: "Audit à partir de 800 €" },
+    pricing: { minPriceEur: 600, label: "Audit à partir de 600 €" },
     timeline: "1 à 2 semaines pour l’audit, forfait correctifs sur demande",
     iconKind: "audit",
     schemaServiceType: "SEO consulting",
@@ -144,7 +145,7 @@ export const faqEntries: readonly FaqEntry[] = [
     id: "delais-creation",
     question: "Combien de temps prend la création d’un site ?",
     answer:
-      "Comptez 4 à 8 semaines pour un site sur-mesure, selon le nombre de pages et la richesse des animations. Une landing focalisée peut sortir en 2 à 3 semaines ; un site éditorial complet avec CMS et multilingue plutôt 8 à 10 semaines. Je donne un rétro-planning ferme dès la signature du devis.",
+      "Comptez 1 à 8 semaines pour un site sur-mesure, selon le nombre de pages et la richesse des animations. Une landing focalisée peut sortir en 1 à 2 semaines ; un site éditorial complet avec CMS et multilingue plutôt 8 à 10 semaines. Je donne un rétro-planning ferme dès la signature du devis.",
   },
   {
     id: "maintenance-livraison",

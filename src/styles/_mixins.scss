@@ -133,3 +133,112 @@
     @content;
   }
 }
+
+// -----------------------------------------------------------------------------
+// BUTTONS — square editorial pills with a top-left fill on hover
+// -----------------------------------------------------------------------------
+
+// Shared structural rules: inline-flex, square corners, 1px border, an
+// absolutely-positioned ::before that holds the hover fill (clipped from
+// a 0% circle anchored top-left up to 150% — covers the rectangle from
+// the corner outward). Children sit above the fill via a stacking
+// context (isolation: isolate) and the ::before's negative z-index.
+@mixin _button-base {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  padding: $space-2 $space-3;
+  font-family: inherit;
+  font-weight: 500;
+  font-size: $font-body-m;
+  letter-spacing: 0.01em;
+  border-radius: 0;
+  cursor: pointer;
+  overflow: hidden;
+  isolation: isolate;
+  transition: color $motion-duration-base $motion-ease-soft;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    clip-path: circle(0% at 0% 0%);
+    transition: clip-path $motion-duration-base $motion-ease-soft;
+  }
+
+  &:hover::before,
+  &:focus-visible::before {
+    clip-path: circle(150% at 0% 0%);
+  }
+
+  svg {
+    flex-shrink: 0;
+    transition: transform $motion-duration-fast $motion-ease-soft;
+  }
+
+  &:hover svg,
+  &:focus-visible svg {
+    transform: translateX(3px);
+  }
+
+  &:focus-visible {
+    outline: 1px dashed currentColor;
+    outline-offset: 4px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+
+    &::before {
+      transition: none;
+    }
+  }
+
+  @include reduced-motion {
+    transition: none;
+
+    &::before {
+      transition: none;
+    }
+  }
+}
+
+// Light variant — white background, black text. On hover the black
+// fill sweeps in from the top-left, text inverts to white.
+@mixin button-white {
+  @include _button-base;
+  background-color: $color-fg;
+  color: $color-bg;
+  border: 1px solid $color-fg;
+
+  &::before {
+    background-color: $color-bg;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: $color-fg;
+  }
+}
+
+// Dark variant — black background, white text + white border. On hover
+// the white fill sweeps in from the top-left, text inverts to black.
+@mixin button-black {
+  @include _button-base;
+  background-color: $color-bg;
+  color: $color-fg;
+  border: 1px solid $color-fg;
+
+  &::before {
+    background-color: $color-fg;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: $color-bg;
+  }
+}

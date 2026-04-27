@@ -136,52 +136,11 @@
 }
 
 .ctaPrimary {
-  @include font-body($font-body-s);
-  display: inline-flex;
-  align-items: center;
-  gap: $space-2;
-  padding: 0.625rem $space-3;
-  color: $color-fg;
-  background-color: transparent;
-  border: 1px solid $color-line;
-  border-radius: 999px;
-  transition:
-    background-color $motion-duration-fast $motion-ease-soft,
-    color $motion-duration-fast $motion-ease-soft,
-    border-color $motion-duration-fast $motion-ease-soft;
-
-  svg {
-    transition: transform $motion-duration-fast $motion-ease-soft;
-  }
-
-  &:hover {
-    background-color: $color-fg;
-    color: $color-bg;
-    border-color: $color-fg;
-
-    svg {
-      transform: translateX(3px);
-    }
-  }
+  @include button-white;
 }
 
 .ctaSecondary {
-  @include font-body($font-body-s);
-  padding: 0.625rem $space-3;
-  color: $color-fg;
-  background-color: transparent;
-  border: 1px solid $color-line;
-  border-radius: 999px;
-  transition:
-    background-color $motion-duration-fast $motion-ease-soft,
-    color $motion-duration-fast $motion-ease-soft,
-    border-color $motion-duration-fast $motion-ease-soft;
-
-  &:hover {
-    background-color: $color-fg;
-    color: $color-bg;
-    border-color: $color-fg;
-  }
+  @include button-black;
 }
 
 .lead {

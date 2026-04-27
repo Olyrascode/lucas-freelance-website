@@ -247,39 +247,7 @@
 }
 
 .submit {
-  @include font-body($font-body-m);
-  display: inline-flex;
-  align-items: center;
-  gap: $space-2;
-  padding: $space-2 $space-3;
-  color: $color-fg;
-  background-color: transparent;
-  border: 1px solid $color-line;
-  border-radius: 999px;
-  cursor: pointer;
-  transition:
-    background-color $motion-duration-fast $motion-ease-soft,
-    color $motion-duration-fast $motion-ease-soft,
-    border-color $motion-duration-fast $motion-ease-soft;
-
-  svg {
-    transition: transform $motion-duration-fast $motion-ease-soft;
-  }
-
-  &:hover:not(:disabled) {
-    background-color: $color-fg;
-    color: $color-bg;
-    border-color: $color-fg;
-
-    svg {
-      transform: translateX(3px);
-    }
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
+  @include button-white;
 }
 
 .legal {

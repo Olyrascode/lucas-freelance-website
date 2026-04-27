@@ -1,6 +1,12 @@
 "use client";
 
-import { Suspense, useMemo, useRef, useState } from "react";
+import {
+  Suspense,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { useFrame } from "@react-three/fiber";
 import { Text, useTexture } from "@react-three/drei";
 import {
@@ -13,14 +19,17 @@ import {
   type Texture,
   type WebGLProgramParametersWithUniforms,
 } from "three";
-import { projects, type Project } from "@/data/projects";
+import { findProjectBySlug, projects, type Project } from "@/data/projects";
 import {
   DOLLY_DISTANCE,
   getDragMoved,
   getFocusPlaneKey,
   getFocusProgress,
+  getOpenSlug,
+  getProjectScroll,
   getRotation,
   openProject,
+  subscribe as subscribeRotondeStore,
 } from "@/components/projets/rotondeStore";
 import { useRotondeControls } from "./useRotondeControls";
 
@@ -351,6 +360,18 @@ export function RotondeScene(): React.ReactElement {
           <Rows />
         </Suspense>
       </group>
+
+      {/*
+        FocusedGallery sits OUTSIDE the rotonde rotation group — at world
+        coordinates — so its slider planes don't spin with the carousel.
+        It only renders when a project is open, then carries its gallery
+        textures on flat planes side-by-side at the focus position.
+        Horizontal scroll input from the overlay translates the group
+        sideways, sliding the next plane into view.
+      */}
+      <Suspense fallback={null}>
+        <FocusedGallery />
+      </Suspense>
     </>
   );
 }
@@ -498,16 +519,50 @@ function ProjectPlane({
   const material = getOrCreatePlaneMaterial(planeKey, texture);
   const geometry = getCurvedPlaneGeometry(planeW, planeH, RADIUS);
 
-  useFrame(() => {
+  useFrame((state) => {
     const frontness = computeFrontness(slotAngle, getRotation());
 
     const mesh = meshRef.current;
     if (mesh) {
       const baseScale = SCALE_SIDE + (SCALE_FRONT - SCALE_SIDE) * frontness;
       const hoverMul = hovered ? HOVER_SCALE : 1;
-      const targetScale = baseScale * hoverMul;
-      const next = mesh.scale.x + (targetScale - mesh.scale.x) * SCALE_LERP;
-      mesh.scale.set(next, next, next);
+      const isFocusedNow = getFocusPlaneKey() === planeKey;
+      const focusProg = getFocusProgress();
+      const planeT = isFocusedNow ? planeEaseOut(focusProg) : 0;
+
+      // Grow the focused plane up to the slider's target size as the
+      // dolly progresses — at planeT = 1 the rotonde plane is the same
+      // dimensions as the gallery slider planes, so the hand-off when
+      // the rotonde plane hides is seamless (no size jump).
+      let focusGrowth = 1;
+      if (isFocusedNow && planeT > 0) {
+        const camera = state.camera as { fov?: number };
+        const fov = camera.fov ?? 72;
+        const { w: galleryW } = computeFocusedPlaneSize(
+          fov,
+          state.size.width,
+          state.size.height,
+        );
+        const focusMul = galleryW / MAIN_PLANE_W;
+        focusGrowth = 1 + (focusMul - 1) * planeT;
+      }
+
+      const targetScale = baseScale * hoverMul * focusGrowth;
+      if (isFocusedNow && planeT > 0.01) {
+        // Apply the target directly during focus — planeT already
+        // carries the easing, so a second SCALE_LERP would lag behind
+        // the dolly position and miss the gallery size at planeT = 1.
+        mesh.scale.set(targetScale, targetScale, targetScale);
+      } else {
+        const next = mesh.scale.x + (targetScale - mesh.scale.x) * SCALE_LERP;
+        mesh.scale.set(next, next, next);
+      }
+
+      // Hide the rotonde plane once it's fully focused — the
+      // <FocusedGallery /> sibling group takes over the visual with its
+      // own slider planes carrying the gallery textures. Both are
+      // sized identically at this moment so the swap is invisible.
+      mesh.visible = !(isFocusedNow && focusProg >= 0.99);
     }
 
     // --- Slot transform, lerped toward the focus target when selected ---
@@ -587,6 +642,150 @@ function ProjectPlane({
       </mesh>
 
       {showLabels ? <ProjectLabels project={project} /> : null}
+    </group>
+  );
+}
+
+// -------------------------------------------------------------------
+// Focused gallery — horizontal slider of plain planes that takes over
+// the visual once a project is fully focused.
+// -------------------------------------------------------------------
+
+// Target world width on a generous (16:9) desktop viewport. The actual
+// width is recomputed each frame in useFrame so the plane stays fully
+// visible on narrower viewports — never wider than 78% of the
+// horizontally visible world space, and the height never taller than
+// 88% of the vertically visible world space (so it always reads as
+// floating in the column with margin around it).
+const SLIDER_TARGET_WORLD_W = 14;
+const SLIDER_FILL_W = 0.78;
+const SLIDER_FILL_H = 0.88;
+const SLIDER_GAP_RATIO = 0.08; // gap between slides as a fraction of plane width
+const SLIDER_ASPECT = MAIN_PLANE_W / MAIN_PLANE_H; // 16:9
+
+// Single source of truth for the focused-state plane size (in world
+// units). Used by both:
+//   - the rotonde ProjectPlane during the focus dolly, so its mesh
+//     scales up to match the slider's target size at planeT = 1
+//   - the FocusedGalleryInner each frame to lay out its slider planes
+// Same formula on both sides means the hand-off (rotonde plane hide /
+// gallery plane show at focusProgress ≥ 0.99) lands on identical
+// dimensions — no size jump.
+function computeFocusedPlaneSize(
+  fovDeg: number,
+  canvasW: number,
+  canvasH: number,
+): { w: number; h: number } {
+  const fovRad = (fovDeg * Math.PI) / 180;
+  const visibleH = 2 * RADIUS * Math.tan(fovRad / 2);
+  const visibleW = visibleH * (canvasW / canvasH);
+  let w = Math.min(SLIDER_TARGET_WORLD_W, visibleW * SLIDER_FILL_W);
+  let h = w / SLIDER_ASPECT;
+  if (h > visibleH * SLIDER_FILL_H) {
+    h = visibleH * SLIDER_FILL_H;
+    w = h * SLIDER_ASPECT;
+  }
+  return { w, h };
+}
+
+function getOpenSlugServerSnapshot(): string | null {
+  return null;
+}
+
+// Outer wrapper that subscribes to the focused slug; its inner sibling
+// (keyed by slug) is what actually loads textures + renders the slider.
+// Keying on slug forces useTexture to reload per project without us
+// having to pre-load every project's gallery upfront.
+function FocusedGallery(): React.ReactElement | null {
+  const focusedSlug = useSyncExternalStore(
+    subscribeRotondeStore,
+    getOpenSlug,
+    getOpenSlugServerSnapshot,
+  );
+
+  if (!focusedSlug) return null;
+  const project = findProjectBySlug(focusedSlug);
+  if (!project) return null;
+
+  const gallery =
+    project.gallery ??
+    [{ src: project.image, caption: project.description }];
+
+  return (
+    <FocusedGalleryInner
+      key={project.slug}
+      slug={project.slug}
+      sources={gallery.map((g) => g.src)}
+    />
+  );
+}
+
+interface FocusedGalleryInnerProps {
+  readonly slug: string;
+  readonly sources: readonly string[];
+}
+
+function FocusedGalleryInner({
+  slug,
+  sources,
+}: FocusedGalleryInnerProps): React.ReactElement {
+  const groupRef = useRef<Group>(null);
+  // Unit plane (1×1) — each mesh scales to (planeW, planeH) per frame
+  // based on the current viewport. One shared geometry for all slides.
+  const unitGeometry = useMemo(() => new PlaneGeometry(1, 1), []);
+
+  const raw = useTexture(sources as string[], (loaded) => {
+    const arr = Array.isArray(loaded) ? loaded : [loaded];
+    for (const t of arr) {
+      t.colorSpace = SRGBColorSpace;
+      t.anisotropy = 8;
+    }
+  });
+  const textures = Array.isArray(raw) ? (raw as Texture[]) : [raw as Texture];
+
+  useFrame((state) => {
+    const group = groupRef.current;
+    if (!group) return;
+
+    const focusProgress = getFocusProgress();
+    group.visible = focusProgress >= 0.99;
+    if (!group.visible) return;
+
+    // Same helper used by ProjectPlane to scale the rotonde plane up
+    // during the focus dolly — guarantees the slider planes here have
+    // identical dimensions, so the rotonde→slider hand-off doesn't pop.
+    const camera = state.camera as { fov?: number };
+    const fov = camera.fov ?? 72;
+    const { w: planeW, h: planeH } = computeFocusedPlaneSize(
+      fov,
+      state.size.width,
+      state.size.height,
+    );
+    const pitch = planeW * (1 + SLIDER_GAP_RATIO);
+
+    const children = group.children;
+    for (let i = 0; i < children.length; i += 1) {
+      const child = children[i];
+      if (!child) continue;
+      child.scale.set(planeW, planeH, 1);
+      child.position.set(i * pitch, 0, 0);
+    }
+
+    const slideProgress = getProjectScroll() / state.size.height;
+    group.position.x = -slideProgress * pitch;
+  });
+
+  return (
+    <group
+      ref={groupRef}
+      name={`focused-gallery-${slug}`}
+      position={[0, 0, -(RADIUS + DOLLY_DISTANCE)]}
+    >
+      {textures.map((tex, i) => (
+        <mesh key={i} geometry={unitGeometry}>
+          <meshBasicMaterial map={tex} toneMapped={false} />
+        </mesh>
+      ))}
     </group>
   );
 }

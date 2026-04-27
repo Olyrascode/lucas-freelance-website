@@ -158,44 +158,11 @@
 }
 
 .ctaPrimary {
-  @include font-body($font-body-m);
-  display: inline-flex;
-  align-items: center;
-  gap: $space-2;
-  padding: $space-2 $space-3;
-  color: $color-bg;
-  background-color: $color-fg;
-  border: 1px solid $color-fg;
-  transition:
-    background-color $motion-duration-fast $motion-ease-soft,
-    color $motion-duration-fast $motion-ease-soft;
-
-  svg {
-    transition: transform $motion-duration-fast $motion-ease-soft;
-  }
-
-  &:hover {
-    background-color: transparent;
-    color: $color-fg;
-
-    svg {
-      transform: translateX(4px);
-    }
-  }
+  @include button-white;
 }
 
 .ctaSecondary {
-  @include font-body($font-body-m);
-  padding: $space-2 $space-3;
-  color: $color-fg;
-  border: 1px solid $color-line;
-  transition:
-    border-color $motion-duration-fast $motion-ease-soft,
-    color $motion-duration-fast $motion-ease-soft;
-
-  &:hover {
-    border-color: $color-fg;
-  }
+  @include button-black;
 }
 
 // --- Utility bottom -------------------------------------------------------

@@ -30,6 +30,11 @@ interface State {
   focusPlaneKey: string | null;
   focusSlotAngle: number | null;
   focusProgress: number;
+  // Vertical scroll position inside the open project overlay (in px).
+  // The focused plane's world-Y is offset by (projectScroll * worldPerPx)
+  // each frame so the plane visually scrolls up in lockstep with the
+  // stacked HTML images underneath it.
+  projectScroll: number;
 }
 
 const state: State = {
@@ -40,6 +45,7 @@ const state: State = {
   focusPlaneKey: null,
   focusSlotAngle: null,
   focusProgress: 0,
+  projectScroll: 0,
 };
 
 const listeners = new Set<Listener>();
@@ -110,6 +116,14 @@ export function setFocusProgress(p: number): void {
   state.focusProgress = p;
 }
 
+export function setProjectScroll(value: number): void {
+  state.projectScroll = value;
+}
+
+export function getProjectScroll(): number {
+  return state.projectScroll;
+}
+
 export function resetRotondeStore(): void {
   state.rotation = 0;
   state.dragMovedPx = 0;
@@ -118,6 +132,7 @@ export function resetRotondeStore(): void {
   state.focusPlaneKey = null;
   state.focusSlotAngle = null;
   state.focusProgress = 0;
+  state.projectScroll = 0;
   emit();
 }
 

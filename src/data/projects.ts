@@ -16,6 +16,18 @@ export interface Project {
   readonly description: string;
   // Comma-separated keywords used in the CreativeWork schema.
   readonly schemaKeywords: string;
+  // Optional in-detail gallery. First item's `src` should equal `image`
+  // (matches the rotonde plane). Each item carries its own caption,
+  // surfaced in the left text column as the user scrolls past the image.
+  // For non-first slides, `title` (and optionally `subtitle`) replace
+  // the project name + role in the left column header — keeps the same
+  // visual structure but turns each frame into its own little story.
+  readonly gallery?: readonly {
+    readonly src: string;
+    readonly title?: string;
+    readonly subtitle?: string;
+    readonly caption: string;
+  }[];
 }
 
 // The four canonical projects — used by the SEO fallback section, the
@@ -59,6 +71,41 @@ export const baseProjects: readonly Project[] = [
     description:
       "Étude de cas personnelle autour de l'univers Kengo Kuma. Composition en colonnes généreuses, typographie serif expressive, rythme de scroll contrôlé par ScrollTrigger. Exploration du vide et du poids des photos.",
     schemaKeywords: "Next.js, GSAP, canvas, direction artistique",
+    gallery: [
+      {
+        src: "/projetSlider/kengo-kuma-projet-lucas-aufrere.webp",
+        caption:
+          "Concept éditorial autour de l'univers Kengo Kuma. Composition en colonnes généreuses, typographie serif expressive, rythme de scroll contrôlé par ScrollTrigger.",
+      },
+      {
+        src: "/projetSlider/kengokuma/kengo-kuma-home.webp",
+        title: "Page d'accueil",
+        subtitle: "Hero photo plein cadre",
+        caption:
+          "Photo plein cadre, micro-interactions au scroll, vide assumé qui laisse respirer l'image. Premier contact pensé comme une couverture de magazine.",
+      },
+      {
+        src: "/projetSlider/kengokuma/kengo-kuma-card.webp",
+        title: "Carte de projet",
+        subtitle: "Index d'architecture",
+        caption:
+          "Hover lift discret, transitions de page entre les fiches. Index dense, lecture rapide, hiérarchie typographique stricte.",
+      },
+      {
+        src: "/projetSlider/kengokuma/kengo-kuma-plan.webp",
+        title: "Vue plan technique",
+        subtitle: "Zoom narratif",
+        caption:
+          "Zoom progressif déclenché par ScrollTrigger, lecture lente de la matière. Le scroll devient l'outil de découverte, pas un simple déplacement.",
+      },
+      {
+        src: "/projetSlider/kengokuma/kengo-kuma-projet.webp",
+        title: "Page projet",
+        subtitle: "Galerie éditoriale",
+        caption:
+          "Galerie photo plein cadre, captions éditoriales, rythme contrôlé. Chaque image respire, chaque légende a sa place dans le flux.",
+      },
+    ],
   },
   {
     slug: "jacquemus",
@@ -77,6 +124,48 @@ export const baseProjects: readonly Project[] = [
     description:
       "Étude d'une boutique Jacquemus repensée comme un magazine mode. Hero plein cadre, galerie produits façon portfolio, transitions atmosphériques entre sections. Focus sur le rythme et la lenteur assumée.",
     schemaKeywords: "Next.js, GSAP, typographie éditoriale",
+    gallery: [
+      {
+        src: "/projetSlider/jacquemus-projet-lucas-aufrere.webp",
+        caption:
+          "Concept e-commerce mode — direction éditoriale forte, image plein cadre, navigation tactile et lenteur assumée.",
+      },
+      {
+        src: "/projetSlider/jacquemus/jacquemus-paysan.webp",
+        title: "Hero produit",
+        subtitle: "Photographie pleine page",
+        caption:
+          "Photographie plein cadre, transitions atmosphériques entre sections. Le produit est mis en scène comme un sujet, pas comme un article de catalogue.",
+      },
+      {
+        src: "/projetSlider/jacquemus/jacquemus-paysan-edito.webp",
+        title: "Layout éditorial",
+        subtitle: "Composition magazine",
+        caption:
+          "Typographie serif expressive, composition magazine, alignements asymétriques. Le rythme typographique guide la lecture, pas la grille.",
+      },
+      {
+        src: "/projetSlider/jacquemus/jacquemus-edito-2.webp",
+        title: "Page galerie",
+        subtitle: "Portfolio produit",
+        caption:
+          "Galerie produits façon portfolio, focus sur le rythme et l'espace blanc. Chaque image a sa propre temporalité de lecture.",
+      },
+      {
+        src: "/projetSlider/jacquemus/jacquemus-boutique-layer.webp",
+        title: "Layer boutique",
+        subtitle: "Overlay produit",
+        caption:
+          "Overlay produit avec animation de transition douce, sortie par effacement vertical. La boutique reste un détail, jamais le sujet principal.",
+      },
+      {
+        src: "/projetSlider/jacquemus/jacquemus-produit-layer.webp",
+        title: "Détail produit",
+        subtitle: "Vue immersive",
+        caption:
+          "Vue immersive, micro-interactions au hover, hiérarchie typographique soignée. Chaque détail invite à rester un peu plus longtemps.",
+      },
+    ],
   },
   {
     slug: "fyconic",

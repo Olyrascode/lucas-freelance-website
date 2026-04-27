@@ -71,7 +71,7 @@ function ServiceBlock({ service }: ServiceBlockProps): React.ReactElement {
 
             <div className={styles.subBlock}>
               <h3 className={styles.subHeading} data-lines>
-                Tarif &amp; délais
+                {service.timeline ? "Tarif & délais" : "Tarif"}
               </h3>
               <dl className={styles.metaList}>
                 <div className={styles.metaRow}>
@@ -82,14 +82,16 @@ function ServiceBlock({ service }: ServiceBlockProps): React.ReactElement {
                     {service.pricing.label}
                   </dd>
                 </div>
-                <div className={styles.metaRow}>
-                  <dt className={styles.metaTerm} data-lines>
-                    Délais
-                  </dt>
-                  <dd className={styles.metaValue} data-lines>
-                    {service.timeline}
-                  </dd>
-                </div>
+                {service.timeline ? (
+                  <div className={styles.metaRow}>
+                    <dt className={styles.metaTerm} data-lines>
+                      Délais
+                    </dt>
+                    <dd className={styles.metaValue} data-lines>
+                      {service.timeline}
+                    </dd>
+                  </div>
+                ) : null}
               </dl>
             </div>
 

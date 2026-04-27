@@ -1,22 +1,38 @@
 @use "styles/variables" as *;
 @use "styles/mixins" as *;
 
+// The whole overlay is a scrollable surface: text column sticky on the
+// left, image column flowing on the right. As the user scrolls, the
+// stacked images defile through the right column while the text stays
+// in place. The first image matches the 3D plane visible behind, so the
+// hand-off from WebGL focus dolly to HTML is seamless.
 .root {
   position: fixed;
   inset: 0;
   z-index: $z-overlay;
-  pointer-events: none;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  pointer-events: auto;
 
-  // Exposed via JS: mirrors the focusProgress each frame so the backdrop
-  // can fade in/out in lockstep with the camera dolly.
+  display: grid;
+  grid-template-columns: 56% 44%;
+
+  // Mirrors focusProgress each frame for the fixed backdrop / close
+  // button opacity.
   --focus-progress: 0;
+
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
-// Backdrop only covers the LEFT column — the right half stays transparent
-// so the 3D plane shows through. Opacity tracks the focus dolly.
+// Fixed editorial backdrop on the left half of the viewport. Stays in
+// place even as the gallery scrolls, so the text column always reads on
+// top of the same gradient.
 .backdrop {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   bottom: 0;
@@ -30,7 +46,8 @@
   backdrop-filter: blur(20px) saturate(0.7);
   -webkit-backdrop-filter: blur(20px) saturate(0.7);
   opacity: var(--focus-progress, 0);
-  pointer-events: auto;
+  pointer-events: none;
+  z-index: 0;
 
   @include reduced-motion {
     opacity: 1;
@@ -38,11 +55,10 @@
 }
 
 .close {
-  position: absolute;
+  position: fixed;
   top: calc(#{$header-height-mobile} + #{$space-3});
   right: $gutter;
-  z-index: 2;
-  pointer-events: auto;
+  z-index: 3;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -50,7 +66,7 @@
   height: 44px;
   border: 1px solid $color-line;
   border-radius: 999px;
-  background: transparent;
+  background: $color-bg;
   color: $color-fg;
   cursor: pointer;
   opacity: var(--focus-progress, 0);
@@ -71,24 +87,29 @@
   }
 }
 
-// Text column — left-aligned, constrained width, floats on top of backdrop.
-// Opacity 0 by default so the raw text can NEVER flash into view before
-// useGSAP has had a chance to split it into overflow-hidden masks. GSAP
-// bumps opacity to 1 as soon as the reveal stage fires.
+// --- Left column — sticky text ------------------------------------------
+
+.contentColumn {
+  grid-column: 1;
+  position: relative;
+  z-index: 2;
+}
+
+// Text container — left-aligned, constrained width, sticks centered in
+// the viewport so it reads steady while the gallery scrolls past on the
+// right. Opacity 0 by default so the raw text never flashes before
+// useGSAP has had a chance to split it into masks.
 .content {
-  position: absolute;
+  position: sticky;
   top: 0;
-  left: 0;
-  bottom: 0;
-  width: 56%;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   gap: $space-3;
   justify-content: center;
-  padding: calc(#{$header-height-desktop} + #{$space-6}) $gutter $space-6
+  padding: calc(#{$header-height-desktop} + #{$space-6}) $space-5 $space-6
     calc(#{$gutter} + #{$space-3});
   pointer-events: auto;
-  z-index: 1;
   opacity: 0;
 
   @include desktop-up {
@@ -154,4 +175,42 @@
     color: $color-fg;
     margin: 0;
   }
+}
+
+// --- Right column — stacked gallery -------------------------------------
+// Just images flowing in normal block order. Each item has the same
+// 16:9 aspect ratio as the 3D plane geometry (8 × 4.5 in world units),
+// so they read as a continuation of the focused project image. When the
+// user scrolls the overlay, the column moves naturally upward and the
+// next frame slides into the same spot the plane occupied.
+
+// The gallery column is now a pure scroll-runway — no rendered images.
+// The 3D <FocusedGallery /> in RotondeScene paints the slider behind
+// the overlay; this column only provides scrollable height so vertical
+// wheel input drives the slider's horizontal translation.
+.gallery {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  background-color: transparent;
+  pointer-events: none;
+}
+
+.scrollSlot {
+  width: 100%;
+  height: 100dvh;
+  pointer-events: none;
+  background: transparent;
+}
+
+// Mono frame counter under the caption — gives the user a sense of
+// where they are in the gallery. Only meaningful when the project has
+// more than one image.
+.galleryCounter {
+  font-family: $font-mono;
+  font-size: $font-label-sm;
+  color: $color-fg-muted;
+  letter-spacing: 0.08em;
+  margin: 0;
+  padding-top: $space-2;
 }

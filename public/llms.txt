@@ -49,7 +49,7 @@ agences de communication.
 
 ## Tarifs indicatifs
 
-- Taux journalier moyen : à partir de 450€/jour (direct), 360€/jour (white-label)
-- Site sur-mesure : à partir de 3500€
-- Animations et interactions : à partir de 2000€
-- Audit SEO technique : à partir de 800€
+- Taux journalier moyen : 450€/jour (direct comme white-label)
+- Site sur-mesure : à partir de 3500€ (1 à 8 semaines selon le périmètre)
+- Animations et interactions : au TJM 450€/jour
+- Audit SEO technique : à partir de 600€
